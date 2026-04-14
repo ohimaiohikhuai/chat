@@ -6,13 +6,14 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no"
     />
-    <title>Chatrix | Real‑time Chat</title>
+    <title>Chatrix Cloud | Full Features</title>
     <link
       rel="icon"
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300d4ff'%3E%3Cpath d='M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E"
     />
     <style>
+      /* ===== FULL STYLES (same as your original app) ===== */
       * {
         margin: 0;
         padding: 0;
@@ -284,6 +285,7 @@
         margin-right: 12px;
         overflow: hidden;
         background-size: cover;
+        background-position: center;
       }
       .friend-name {
         color: white;
@@ -717,6 +719,12 @@
         }
       }
     </style>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
   </head>
   <body>
     <div class="phone">
@@ -1002,7 +1010,7 @@
           <input
             type="text"
             id="friendUsername"
-            placeholder="Username (case-insensitive)"
+            placeholder="Username"
           /><button id="sendRequestBtn">Send Request</button
           ><button id="closeAddFriendModal">Cancel</button>
         </div>
@@ -1022,12 +1030,12 @@
             type="text"
             id="loginUser"
             placeholder="Username"
-            value=""
+            value="alex"
           /><input
             type="password"
             id="loginPass"
             placeholder="Password"
-            value=""
+            value="alex123"
           /><button id="loginBtn">Log In</button>
           <div class="link" id="showSignupLink">Sign up</div>
         </div>
@@ -1049,1495 +1057,1277 @@
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
     <script>
-      (function () {
-        // ---------- DATA ----------
-        let currentUser = null;
-        let currentChatId = null;
-        let currentChatType = "friend";
-        let users = {};
-        let messages = {};
-        let chapters = [];
-        let hubs = [];
-        let groups = [];
-        let userProfiles = {};
-        let groupChats = {};
-        let friendRequests = {};
-        let userTiers = {};
+      // ==================== FIREBASE CONFIG (YOUR PROVIDED CONFIG) ====================
+      const firebaseConfig = {
+        apiKey: "AIzaSyAGftHy2cSWCz_h5nKQF-BChy885CYA9f4",
+        authDomain: "chatrix-77180.firebaseapp.com",
+        projectId: "chatrix-77180",
+        storageBucket: "chatrix-77180.firebasestorage.app",
+        messagingSenderId: "258648778331",
+        appId: "1:258648778331:web:294dd149ce2baf32e9c17e",
+        measurementId: "G-Y1HXR2QPKN",
+      };
+      // =============================================================================
 
-        let mediaRecorderObj = null;
-        let audioChunksArray = [];
-        let isRecordingActive = false;
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      const storage = firebase.storage();
+      const auth = firebase.auth();
 
-        const emojis = [
-          "😀",
-          "😃",
-          "😄",
-          "😁",
-          "😆",
-          "😅",
-          "😂",
-          "🤣",
-          "😊",
-          "😇",
-          "🙂",
-          "🙃",
-          "😉",
-          "😌",
-          "😍",
-          "🥰",
-          "😘",
-          "😗",
-          "😙",
-          "😚",
-          "😋",
-          "😛",
-          "😝",
-          "😜",
-          "🤪",
-          "🤨",
-          "🧐",
-          "🤓",
-          "😎",
-          "🥸",
-          "🤩",
-          "🥳",
-          "😏",
-          "😒",
-          "😞",
-          "😔",
-          "😟",
-          "😕",
-          "🙁",
-          "☹️",
-          "😣",
-          "😖",
-          "😫",
-          "😩",
-          "🥺",
-          "😢",
-          "😭",
-          "😤",
-          "😠",
-          "😡",
-          "🤬",
-          "🤯",
-          "😳",
-          "🥵",
-          "🥶",
-          "😱",
-          "😨",
-          "😰",
-          "😥",
-          "😓",
-          "🤗",
-          "🤔",
-          "🤭",
-          "🤫",
-          "🤥",
-          "😶",
-          "😐",
-          "😑",
-          "😬",
-          "🙄",
-          "😯",
-          "😦",
-          "😧",
-          "😮",
-          "😲",
-          "🥱",
-          "😴",
-          "🤤",
-          "😪",
-          "😵",
-          "🤐",
-          "🥴",
-          "🤢",
-          "🤮",
-          "🤧",
-          "😷",
-          "🤒",
-          "🤕",
-          "🤑",
-          "🤠",
-          "😈",
-          "👿",
-          "👹",
-          "👺",
-          "🤡",
-          "💩",
-          "👻",
-          "💀",
-          "☠️",
-          "👽",
-          "👾",
-          "🤖",
-          "🎃",
-          "👍",
-          "👎",
-          "👌",
-          "✌️",
-          "🤞",
-          "🤟",
-          "🤘",
-          "🤙",
-          "👈",
-          "👉",
-          "👆",
-          "👇",
-          "☝️",
-          "✋",
-          "🤚",
-          "🖐️",
-          "🖖",
-          "👋",
-          "💪",
-          "🦾",
-          "🖕",
-          "✍️",
-          "🙏",
-          "💄",
-          "💋",
-          "👄",
-          "🦷",
-          "👅",
-          "👂",
-          "🦻",
-          "👃",
-          "👣",
-          "👁️",
-          "👀",
-          "❤️",
-          "🧡",
-          "💛",
-          "💚",
-          "💙",
-          "💜",
-        ];
+      // Global state
+      let currentUser = null;
+      let currentUserDoc = null;
+      let currentChatId = null;
+      let currentChatType = "friend";
+      let unsubscribeListeners = [];
 
-        // ---------- STORAGE ----------
-        function saveAll() {
-          localStorage.setItem("chatrix_users", JSON.stringify(users));
-          localStorage.setItem("chatrix_messages", JSON.stringify(messages));
-          localStorage.setItem("chatrix_chapters", JSON.stringify(chapters));
-          localStorage.setItem("chatrix_hubs", JSON.stringify(hubs));
-          localStorage.setItem(
-            "chatrix_profiles",
-            JSON.stringify(userProfiles),
-          );
-          localStorage.setItem("chatrix_groups", JSON.stringify(groups));
-          localStorage.setItem(
-            "chatrix_groupChats",
-            JSON.stringify(groupChats),
-          );
-          localStorage.setItem(
-            "chatrix_friendRequests",
-            JSON.stringify(friendRequests),
-          );
-          localStorage.setItem("chatrix_userTiers", JSON.stringify(userTiers));
-        }
-
-        function loadAll() {
-          let saved = localStorage.getItem("chatrix_users");
-          if (saved) {
-            users = JSON.parse(saved);
-          } else {
-            users = {
-              alex: {
-                pass: btoa("alex123"),
-                friends: ["jasmine"],
-                displayName: "Alex",
-              },
-              jasmine: {
-                pass: btoa("jasmine123"),
-                friends: ["alex"],
-                displayName: "Jasmine",
-              },
-            };
-            saveAll();
-          }
-          messages = JSON.parse(
-            localStorage.getItem("chatrix_messages") || "{}",
-          );
-          chapters = JSON.parse(
-            localStorage.getItem("chatrix_chapters") || "[]",
-          );
-          hubs = JSON.parse(localStorage.getItem("chatrix_hubs") || "[]");
-          userProfiles = JSON.parse(
-            localStorage.getItem("chatrix_profiles") || "{}",
-          );
-          groups = JSON.parse(localStorage.getItem("chatrix_groups") || "[]");
-          groupChats = JSON.parse(
-            localStorage.getItem("chatrix_groupChats") || "{}",
-          );
-          friendRequests = JSON.parse(
-            localStorage.getItem("chatrix_friendRequests") || "{}",
-          );
-          userTiers = JSON.parse(
-            localStorage.getItem("chatrix_userTiers") || "{}",
-          );
-
-          Object.keys(users).forEach((u) => {
-            if (!users[u].displayName) users[u].displayName = u;
-            if (!users[u].friends) users[u].friends = [];
-            if (!userTiers[u]) userTiers[u] = { tier: 0, lastPostDate: null };
-          });
-        }
-
-        // ---------- HELPERS ----------
-        function escapeHtml(str) {
-          if (!str) return "";
-          return String(str).replace(/[&<>]/g, (m) =>
-            m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;",
-          );
-        }
-
-        function getFriends(u) {
-          return users[u]?.friends || [];
-        }
-        function getTierName(tier) {
-          if (tier >= 50) return "🏆 LEGEND";
-          if (tier >= 30) return "💎 MASTER";
-          if (tier >= 20) return "🥇 ELITE";
-          if (tier >= 10) return "🥈 ADVANCED";
-          if (tier >= 5) return "🥉 NOVICE";
-          if (tier >= 1) return "🌱 BEGINNER";
-          return "📘 ROOKIE";
-        }
-
-        // ---------- UI REFRESH (REAL TIME) ----------
-        function refreshUI() {
-          if (!currentUser) return;
-          // Reload all data from localStorage to catch changes from other windows/tabs
-          loadAll();
+      // Helper functions
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(/[&<>]/g, (m) =>
+          m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;",
+        );
+      }
+      function formatTime(ts) {
+        if (!ts) return "";
+        const d = ts.toDate ? ts.toDate() : new Date(ts);
+        return d.toLocaleTimeString();
+      }
+      function showScreen(screen) {
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById(screen + "Screen").classList.add("active");
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.classList.remove("active");
+          if (tab.getAttribute("data-tab") === screen)
+            tab.classList.add("active");
+        });
+        if (screen === "chats") {
           renderFriends();
           renderPendingRequests();
-          renderGroups();
-          renderHubs();
-          renderChapters();
-          renderLeaderboard();
-          renderWinners();
-          if (currentChatId && currentChatType === "friend")
-            renderMessages(currentChatId);
-          else if (currentChatId && currentChatType === "group")
-            renderGroupMessages(currentChatId);
-          else if (currentChatId && currentChatType === "hub")
-            renderHubMessages(currentChatId);
-          updateBadges();
         }
+        if (screen === "groups") renderGroups();
+        if (screen === "hubs") renderHubs();
+        if (screen === "chapters") renderChapters();
+        if (screen === "leaderboard") renderLeaderboard();
+        if (screen === "winners") renderWinners();
+      }
+      window.showScreen = showScreen;
+      function closeModal(id) {
+        document.getElementById(id).classList.add("hidden");
+      }
 
-        function updateBadges() {
-          let unread = 0;
-          if (messages[currentUser]) {
-            for (let f in messages[currentUser]) {
-              unread += messages[currentUser][f].filter(
-                (m) => m.from === f && !m.read,
-              ).length;
-            }
-          }
-          let badge = document.getElementById("chatsTabBadge");
-          if (badge) {
-            badge.innerHTML = unread;
-            badge.classList.toggle("hidden", unread === 0);
-          }
-          let chaptersNew = chapters.filter(
-            (c) =>
-              getFriends(currentUser).includes(c.user) &&
-              !c.viewedBy?.includes(currentUser),
-          ).length;
-          let chapBadge = document.getElementById("chaptersTabBadge");
-          if (chapBadge) {
-            chapBadge.innerHTML = chaptersNew;
-            chapBadge.classList.toggle("hidden", chaptersNew === 0);
-          }
+      // ==================== AUTH & USER ====================
+      async function doLogin() {
+        const username = document
+          .getElementById("loginUser")
+          .value.trim()
+          .toLowerCase();
+        const password = document.getElementById("loginPass").value;
+        if (!username || !password) {
+          alert("Enter username and password");
+          return;
         }
-
-        // ---------- SCREENS ----------
-        window.showScreen = function (screen) {
-          document
-            .querySelectorAll(".screen")
-            .forEach((s) => s.classList.remove("active"));
-          let target = document.getElementById(screen + "Screen");
-          if (target) target.classList.add("active");
-          document.querySelectorAll(".tab").forEach((tab) => {
-            tab.classList.remove("active");
-            if (tab.getAttribute("data-tab") === screen)
-              tab.classList.add("active");
+        try {
+          const email = username + "@chatrix.local";
+          await auth.signInWithEmailAndPassword(email, password);
+          await loadCurrentUserData(username);
+          document.getElementById("loginModal").classList.add("hidden");
+          refreshAllUI();
+          updateAvatar();
+          showScreen("chats");
+        } catch (err) {
+          alert("Invalid username or password");
+        }
+      }
+      async function doSignup() {
+        const username = document
+          .getElementById("signupUser")
+          .value.trim()
+          .toLowerCase();
+        const password = document.getElementById("signupPass").value;
+        const confirm = document.getElementById("signupConfirm").value;
+        if (!username || !password) {
+          alert("Username and password required");
+          return;
+        }
+        if (password !== confirm) {
+          alert("Passwords don't match");
+          return;
+        }
+        try {
+          const email = username + "@chatrix.local";
+          await auth.createUserWithEmailAndPassword(email, password);
+          await db.collection("users").doc(username).set({
+            username: username,
+            displayName: username,
+            friends: [],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
-          refreshUI();
-        };
-
-        // ---------- FRIENDS & CHAT (WITH MEDIA & VOICE) ----------
-        function renderMediaMessage(msg) {
-          if (msg.type === "image") {
-            return `<div><img src="${msg.data}" class="media-preview" onclick="window.showImagePreview('${msg.data}')"></div>`;
-          } else if (msg.type === "video") {
-            return `<div><video controls class="media-preview"><source src="${msg.data}"></video></div>`;
-          } else if (msg.type === "file") {
-            return `<div class="file-message"><i class="fas fa-file"></i> <a href="${msg.data}" target="_blank" style="color:#00d4ff;">${msg.fileName || "Download"}</a></div>`;
-          } else if (msg.type === "voice") {
-            return `<div class="voice-message"><i class="fas fa-microphone"></i> <audio controls src="${msg.data}" style="max-width:200px;"></audio></div>`;
-          }
-          return escapeHtml(msg.text);
-        }
-
-        function renderFriends() {
-          let friends = getFriends(currentUser);
-          let container = document.getElementById("friendsList");
-          if (!container) return;
-          if (!friends.length) {
-            container.innerHTML =
-              '<div class="empty">No friends yet. Add some!</div>';
-            return;
-          }
-          container.innerHTML = friends
-            .map((f) => {
-              let unread =
-                messages[currentUser]?.[f]?.filter(
-                  (m) => m.from === f && !m.read,
-                ).length || 0;
-              let lastMsg = messages[currentUser]?.[f]?.slice(-1)[0];
-              let preview = lastMsg
-                ? lastMsg.text ||
-                  (lastMsg.type === "image"
-                    ? "📷 Image"
-                    : lastMsg.type === "video"
-                      ? "🎥 Video"
-                      : lastMsg.type === "voice"
-                        ? "🎤 Voice"
-                        : "📎 File")
-                : "Say hello";
-              return `<div class="friend-item" onclick="window.openChat('${f}','friend')">
-        <div class="friend-avatar">👤</div>
-        <div style="flex:1"><div class="friend-name">${users[f]?.displayName || f}</div><div class="friend-preview">${escapeHtml(preview.substring(0, 50))}</div></div>
-        ${unread > 0 ? `<div class="notification-badge">${unread}</div>` : ""}
-      </div>`;
-            })
-            .join("");
-        }
-
-        function renderMessages(friend) {
-          let msgs = messages[currentUser]?.[friend] || [];
-          let container = document.getElementById("chatMessages");
-          if (!container) return;
-          msgs.forEach((m) => {
-            if (m.from === friend && !m.read) m.read = true;
+          await db.collection("tiers").doc(username).set({
+            tier: 0,
+            lastPostDate: null,
+            streak: 0,
           });
-          saveAll();
-          if (!msgs.length) {
-            container.innerHTML = '<div class="empty">No messages yet</div>';
-            return;
-          }
-          container.innerHTML = msgs
-            .map(
-              (m) =>
-                `<div class="message-bubble ${m.from === currentUser ? "message-sent" : "message-received"}">${renderMediaMessage(m)}<div class="message-time">${m.time}</div></div>`,
-            )
-            .join("");
-          setTimeout(() => {
-            container.scrollTop = container.scrollHeight;
-          }, 50);
-          updateBadges();
-        }
-
-        function sendMediaMessage(to, type, data, fileName = null) {
-          let msg = {
-            id: Date.now(),
-            type,
-            data,
-            fileName,
-            from: currentUser,
-            time: new Date().toLocaleTimeString(),
-            read: false,
-          };
-          if (!messages[currentUser]) messages[currentUser] = {};
-          if (!messages[currentUser][to]) messages[currentUser][to] = [];
-          messages[currentUser][to].push(msg);
-          if (!messages[to]) messages[to] = {};
-          if (!messages[to][currentUser]) messages[to][currentUser] = [];
-          messages[to][currentUser].push({ ...msg, read: false });
-          saveAll();
-          if (currentChatId === to && currentChatType === "friend")
-            renderMessages(to);
-          renderFriends();
-        }
-
-        function sendTextMessage(to, text) {
-          if (!text.trim()) return;
-          let msg = {
-            id: Date.now(),
-            text: text.trim(),
-            from: currentUser,
-            time: new Date().toLocaleTimeString(),
-            read: false,
-          };
-          if (!messages[currentUser]) messages[currentUser] = {};
-          if (!messages[currentUser][to]) messages[currentUser][to] = [];
-          messages[currentUser][to].push(msg);
-          if (!messages[to]) messages[to] = {};
-          if (!messages[to][currentUser]) messages[to][currentUser] = [];
-          messages[to][currentUser].push({ ...msg, read: false });
-          saveAll();
-          if (currentChatId === to && currentChatType === "friend")
-            renderMessages(to);
-          renderFriends();
-        }
-
-        function sendMessage() {
-          let input = document.getElementById("messageInput");
-          if (!input || !input.value.trim() || !currentChatId) return;
-          if (currentChatType === "friend")
-            sendTextMessage(currentChatId, input.value);
-          else if (currentChatType === "group")
-            sendGroupMessage(currentChatId, input.value);
-          else if (currentChatType === "hub")
-            sendHubMessage(currentChatId, input.value);
-          input.value = "";
-          refreshUI(); // immediate update
-        }
-
-        window.openChat = function (id, type) {
-          currentChatId = id;
-          currentChatType = type;
-          if (type === "friend") {
-            document.getElementById("chatHeaderName").innerHTML =
-              users[id]?.displayName || id;
-            document.getElementById("chatHeaderAvatar").innerHTML = "👤";
-            renderMessages(id);
-          } else if (type === "group") {
-            let g = groups.find((g) => g.id == id);
-            document.getElementById("chatHeaderName").innerHTML = g.name;
-            document.getElementById("chatHeaderAvatar").innerHTML = g.picData
-              ? `<div style="background-image:url(${g.picData}); background-size:cover; width:100%; height:100%;"></div>`
-              : "👥";
-            renderGroupMessages(id);
-          } else if (type === "hub") {
-            let h = hubs.find((h) => h.id == id);
-            document.getElementById("chatHeaderName").innerHTML = h.name;
-            document.getElementById("chatHeaderAvatar").innerHTML = h.picData
-              ? `<div style="background-image:url(${h.picData}); background-size:cover; width:100%; height:100%;"></div>`
-              : "📡";
-            renderHubMessages(id);
-          }
-          document.getElementById("chatView").classList.add("open");
-        };
-
-        function closeChat() {
-          currentChatId = null;
-          document.getElementById("chatView").classList.remove("open");
-        }
-
-        // ---------- FRIEND REQUESTS ----------
-        function renderPendingRequests() {
-          let requests =
-            friendRequests[currentUser]?.filter(
-              (r) => r.status === "pending",
-            ) || [];
-          let container = document.getElementById("pendingRequestsSection");
-          if (!container) return;
-          if (!requests.length) {
-            container.innerHTML = "";
-            return;
-          }
-          container.innerHTML =
-            `<div class="section-title">📨 Pending (${requests.length})</div>` +
-            requests
-              .map(
-                (r) =>
-                  `<div class="request-item"><div class="request-avatar">👤</div><div style="flex:1"><div class="friend-name">${users[r.from]?.displayName || r.from}</div></div><button class="small-btn" onclick="window.acceptReq('${r.from}')">Accept</button><button class="small-btn" onclick="window.denyReq('${r.from}')">Deny</button></div>`,
-              )
-              .join("");
-        }
-
-        function sendFriendRequest() {
-          let targetRaw = document
-            .getElementById("friendUsername")
-            .value.trim();
-          if (!targetRaw) {
-            alert("Please enter a username");
-            return;
-          }
-          let target = targetRaw.toLowerCase();
-          if (target === currentUser) {
-            alert("You cannot add yourself");
-            return;
-          }
-          if (!users[target]) {
-            alert(
-              `User "${targetRaw}" not found. Make sure the username exists.`,
-            );
-            return;
-          }
-          if (users[currentUser].friends.includes(target)) {
-            alert("Already friends!");
-            closeModal("addFriendModal");
-            return;
-          }
-          if (!friendRequests[target]) friendRequests[target] = [];
-          if (
-            friendRequests[target].some(
-              (r) => r.from === currentUser && r.status === "pending",
-            )
-          ) {
-            alert("Friend request already sent!");
-            return;
-          }
-          friendRequests[target].push({
-            from: currentUser,
-            status: "pending",
-            timestamp: Date.now(),
-          });
-          saveAll();
-          alert(`Friend request sent to ${users[target].displayName}!`);
-          closeModal("addFriendModal");
-          document.getElementById("friendUsername").value = "";
-          refreshUI();
-        }
-
-        window.acceptReq = function (fromUser) {
-          let idx = friendRequests[currentUser].findIndex(
-            (r) => r.from === fromUser,
-          );
-          if (idx !== -1) {
-            friendRequests[currentUser].splice(idx, 1);
-            if (!users[currentUser].friends.includes(fromUser))
-              users[currentUser].friends.push(fromUser);
-            if (!users[fromUser].friends.includes(currentUser))
-              users[fromUser].friends.push(currentUser);
-            saveAll();
-            refreshUI();
-            alert(`You are now friends with ${users[fromUser]?.displayName}`);
-          }
-        };
-
-        window.denyReq = function (fromUser) {
-          let idx = friendRequests[currentUser].findIndex(
-            (r) => r.from === fromUser,
-          );
-          if (idx !== -1) {
-            friendRequests[currentUser].splice(idx, 1);
-            saveAll();
-            refreshUI();
-            alert(`Denied request from ${users[fromUser]?.displayName}`);
-          }
-        };
-
-        // ---------- GROUPS (FULL FEATURED) ----------
-        function renderGroups() {
-          let myGroups = groups.filter((g) => g.members?.includes(currentUser));
-          let container = document.getElementById("groupsList");
-          if (!container) return;
-          if (!myGroups.length) {
-            container.innerHTML =
-              '<div class="empty">No groups yet. Create one!</div>';
-            return;
-          }
-          container.innerHTML = myGroups
-            .map((g) => {
-              let lastMsg = groupChats[g.id]?.slice(-1)[0];
-              let preview = lastMsg ? lastMsg.text || "Media" : "No messages";
-              let unread =
-                groupChats[g.id]?.filter(
-                  (m) => m.from !== currentUser && !m.read,
-                ).length || 0;
-              let avatarStyle = g.picData
-                ? `style="background-image: url(${g.picData}); background-size: cover;"`
-                : "";
-              return `<div class="group-item" onclick="window.openChat(${g.id},'group')">
-        <div class="group-avatar" ${avatarStyle}>${!g.picData ? "👥" : ""}</div>
-        <div style="flex:1"><div class="friend-name">${escapeHtml(g.name)}</div><div class="friend-preview">${escapeHtml(preview.substring(0, 50))}</div></div>
-        ${unread > 0 ? `<div class="notification-badge">${unread}</div>` : ""}
-      </div>`;
-            })
-            .join("");
-        }
-
-        function renderGroupMessages(id) {
-          let msgs = groupChats[id] || [];
-          let container = document.getElementById("chatMessages");
-          if (!container) return;
-          msgs.forEach((m) => {
-            if (m.from !== currentUser && !m.read) m.read = true;
-          });
-          saveAll();
-          if (!msgs.length) {
-            container.innerHTML = '<div class="empty">No messages yet</div>';
-            return;
-          }
-          container.innerHTML = msgs
-            .map(
-              (m) =>
-                `<div class="message-bubble ${m.from === currentUser ? "message-sent" : "message-received"}">${renderMediaMessage(m)}<div class="message-time">${m.time}</div></div>`,
-            )
-            .join("");
-          setTimeout(() => {
-            container.scrollTop = container.scrollHeight;
-          }, 50);
-          updateBadges();
-        }
-
-        function sendGroupMessage(id, text) {
-          if (!text.trim()) return;
-          let msg = {
-            id: Date.now(),
-            text: text.trim(),
-            from: currentUser,
-            time: new Date().toLocaleTimeString(),
-            read: false,
-          };
-          if (!groupChats[id]) groupChats[id] = [];
-          groupChats[id].push(msg);
-          saveAll();
-          if (currentChatId == id && currentChatType === "group")
-            renderGroupMessages(id);
-          renderGroups();
-        }
-
-        function showCreateGroupModal() {
-          let friends = getFriends(currentUser);
-          let membersHtml = friends
-            .map(
-              (f) =>
-                `<label class="member-checkbox"><input type="checkbox" value="${f}" class="member-check"> ${users[f]?.displayName || f}</label>`,
-            )
-            .join("");
-          document.getElementById("groupMembersSelect").innerHTML = membersHtml;
-          document.getElementById("groupAdminsSelect").innerHTML =
-            `<label class="member-checkbox"><input type="checkbox" id="adminSelf" checked disabled> ${users[currentUser]?.displayName || currentUser} (Creator - Always Admin)</label>`;
-          document
-            .getElementById("createGroupModal")
-            .classList.remove("hidden");
-          document.getElementById("groupPicPreview").style.backgroundImage = "";
-          document.getElementById("groupPicPreview").innerHTML = "👥";
-          document.getElementById("groupPicFile").value = "";
-        }
-
-        function createGroup() {
-          let name = document.getElementById("groupName").value.trim();
-          if (!name) {
-            alert("Group name required");
-            return;
-          }
-          let desc = document.getElementById("groupDesc").value.trim();
-          let selectedMembers = [
-            ...document.querySelectorAll("#groupMembersSelect input:checked"),
-          ].map((cb) => cb.value);
-          let admins = [currentUser];
-          let picData = null;
-          let previewDiv = document.getElementById("groupPicPreview");
-          if (
-            previewDiv.style.backgroundImage &&
-            previewDiv.style.backgroundImage !== "none"
-          ) {
-            picData = previewDiv.style.backgroundImage.slice(5, -2);
-          }
-          let group = {
-            id: Date.now(),
-            name,
-            desc,
-            creator: currentUser,
-            admins,
-            members: [currentUser, ...selectedMembers],
-            picData,
-          };
-          groups.push(group);
-          groupChats[group.id] = [];
-          saveAll();
-          renderGroups();
-          closeModal("createGroupModal");
-          document.getElementById("groupName").value = "";
-          document.getElementById("groupDesc").value = "";
-          refreshUI();
-        }
-
-        // ---------- HUBS (FULL FEATURED) ----------
-        function renderHubs() {
-          let myHubs = hubs.filter((h) => h.members?.includes(currentUser));
-          let container = document.getElementById("hubsList");
-          if (!container) return;
-          if (!myHubs.length) {
-            container.innerHTML = '<div class="empty">No hubs</div>';
-            return;
-          }
-          container.innerHTML = myHubs
-            .map((h) => {
-              let unread =
-                h.messages?.filter((m) => m.from !== currentUser && !m.read)
-                  .length || 0;
-              let avatarStyle = h.picData
-                ? `style="background-image: url(${h.picData}); background-size: cover;"`
-                : "";
-              return `<div class="hub-item" onclick="window.openChat(${h.id},'hub')">
-        <div class="hub-avatar" ${avatarStyle}>${!h.picData ? "📡" : ""}</div>
-        <div style="flex:1"><div class="friend-name">${escapeHtml(h.name)}</div><div class="friend-preview">${h.members.length} members</div></div>
-        ${unread > 0 ? `<div class="notification-badge">${unread}</div>` : ""}
-      </div>`;
-            })
-            .join("");
-        }
-
-        function renderHubMessages(id) {
-          let hub = hubs.find((h) => h.id == id);
-          let msgs = hub.messages || [];
-          let container = document.getElementById("chatMessages");
-          if (!container) return;
-          msgs.forEach((m) => {
-            if (m.from !== currentUser && !m.read) m.read = true;
-          });
-          saveAll();
-          if (!msgs.length) {
-            container.innerHTML = '<div class="empty">No messages yet</div>';
-            return;
-          }
-          container.innerHTML = msgs
-            .map(
-              (m) =>
-                `<div class="message-bubble ${m.from === currentUser ? "message-sent" : "message-received"}">${renderMediaMessage(m)}<div class="message-time">${m.time}</div></div>`,
-            )
-            .join("");
-          setTimeout(() => {
-            container.scrollTop = container.scrollHeight;
-          }, 50);
-          updateBadges();
-        }
-
-        function sendHubMessage(id, text) {
-          if (!text.trim()) return;
-          let hub = hubs.find((h) => h.id == id);
-          if (!hub || !hub.members.includes(currentUser)) return;
-          if (!hub.messages) hub.messages = [];
-          let msg = {
-            id: Date.now(),
-            text: text.trim(),
-            from: currentUser,
-            time: new Date().toLocaleTimeString(),
-            read: false,
-          };
-          hub.messages.push(msg);
-          saveAll();
-          if (currentChatId == id && currentChatType === "hub")
-            renderHubMessages(id);
-          renderHubs();
-        }
-
-        function showCreateHubModal() {
-          document.getElementById("createHubModal").classList.remove("hidden");
-          document.getElementById("hubPicPreview").innerHTML = "📡";
-          document.getElementById("hubPicPreview").style.backgroundImage = "";
-          document.getElementById("hubPicFile").value = "";
-        }
-
-        function createHub() {
-          let name = document.getElementById("hubName").value.trim();
-          if (!name) {
-            alert("Hub name required");
-            return;
-          }
-          let desc = document.getElementById("hubDesc").value.trim();
-          let password = document.getElementById("hubPass").value;
-          let picData = null;
-          let previewDiv = document.getElementById("hubPicPreview");
-          if (
-            previewDiv.style.backgroundImage &&
-            previewDiv.style.backgroundImage !== "none"
-          ) {
-            picData = previewDiv.style.backgroundImage.slice(5, -2);
-          }
-          let hub = {
-            id: Date.now(),
-            creator: currentUser,
-            name,
-            desc,
-            password,
-            members: [currentUser],
-            messages: [],
-            picData,
-          };
-          hubs.push(hub);
-          saveAll();
-          renderHubs();
-          closeModal("createHubModal");
-          document.getElementById("hubName").value = "";
-          document.getElementById("hubDesc").value = "";
-          document.getElementById("hubPass").value = "";
-          refreshUI();
-        }
-
-        // ---------- CHAPTERS ----------
-        function renderChapters() {
-          let friends = getFriends(currentUser);
-          let visible = chapters.filter(
-            (c) => friends.includes(c.user) || c.user === currentUser,
-          );
-          let container = document.getElementById("chaptersList");
-          if (!container) return;
-          if (!visible.length) {
-            container.innerHTML = '<div class="empty">No chapters</div>';
-            return;
-          }
-          container.innerHTML = visible
-            .map((c) => {
-              let isNew =
-                !c.viewedBy?.includes(currentUser) && c.user !== currentUser;
-              return `<div class="chapter-card" style="${isNew ? "border-left-color: #ff4466;" : ""}" onclick="window.viewChapter(${c.id})">
-        <div class="chapter-header"><div class="chapter-avatar">📖</div><div><div class="chapter-user">${users[c.user]?.displayName || c.user} <span class="tier-badge">${getTierName(userTiers[c.user]?.tier || 0)}</span></div><div class="chapter-time">${c.timeStr}</div></div></div>
-        <div class="chapter-text">${escapeHtml(c.text)}</div>
-        <div class="chapter-stats"><span>👁️ ${c.views || 0}</span><button class="like-btn ${c.likes?.includes(currentUser) ? "liked" : ""}" onclick="event.stopPropagation();window.likeChapter(${c.id})"><i class="fas fa-heart"></i> ${c.likes?.length || 0}</button></div>
-        ${c.user === currentUser ? `<button class="delete-chapter" onclick="event.stopPropagation();window.deleteChapter(${c.id})">Del</button>` : ""}
-      </div>`;
-            })
-            .join("");
-          updateBadges();
-        }
-
-        window.viewChapter = function (id) {
-          let c = chapters.find((c) => c.id === id);
-          if (c && !c.viewedBy?.includes(currentUser)) {
-            if (!c.viewedBy) c.viewedBy = [];
-            c.viewedBy.push(currentUser);
-            c.views = (c.views || 0) + 1;
-            saveAll();
-            renderChapters();
-          }
-          alert(
-            `📖 ${c.text}\n❤️ ${c.likes?.length || 0} likes\n👁️ ${c.views || 0} views`,
-          );
-          refreshUI();
-        };
-
-        window.likeChapter = function (id) {
-          let c = chapters.find((c) => c.id === id);
-          if (c) {
-            if (!c.likes) c.likes = [];
-            let idx = c.likes.indexOf(currentUser);
-            if (idx === -1) c.likes.push(currentUser);
-            else c.likes.splice(idx, 1);
-            saveAll();
-            renderChapters();
-          }
-          refreshUI();
-        };
-
-        window.deleteChapter = function (id) {
-          if (confirm("Delete this chapter?")) {
-            chapters = chapters.filter((c) => c.id !== id);
-            saveAll();
-            renderChapters();
-            refreshUI();
-          }
-        };
-
-        function postChapter() {
-          let text = document.getElementById("chapterText").value.trim();
-          if (text) {
-            let today = new Date().toDateString();
-            if (userTiers[currentUser].lastPostDate !== today) {
-              userTiers[currentUser].tier =
-                (userTiers[currentUser].tier || 0) + 1;
-              userTiers[currentUser].lastPostDate = today;
-            }
-            chapters.unshift({
-              id: Date.now(),
-              user: currentUser,
-              text,
-              timeStr: new Date().toLocaleString(),
-              likes: [],
-              views: 0,
-              viewedBy: [],
-            });
-            saveAll();
-            renderChapters();
-            renderLeaderboard();
-            closeModal("chapterModal");
-            document.getElementById("chapterText").value = "";
-            alert("Chapter posted! +1 Tier point");
-            refreshUI();
-          }
-        }
-
-        // ---------- LEADERBOARD (only existing users) ----------
-        function getLeaderboard() {
-          return Object.keys(userTiers)
-            .filter((u) => users[u])
-            .map((u) => ({
-              displayName: users[u]?.displayName || u,
-              tier: userTiers[u]?.tier || 0,
-            }))
-            .sort((a, b) => b.tier - a.tier);
-        }
-
-        function renderLeaderboard() {
-          let board = getLeaderboard();
-          let container = document.getElementById("leaderboardList");
-          if (!container) return;
-          if (!board.length) {
-            container.innerHTML = '<div class="empty">No data</div>';
-            return;
-          }
-          container.innerHTML =
-            `<div class="leaderboard-header"><span>Rank</span><span>User</span><span>Tier</span></div>` +
-            board
-              .map(
-                (u, idx) =>
-                  `<div class="leaderboard-item"><div class="leaderboard-rank">#${idx + 1}</div><div>🏆</div><div style="flex:1"><div class="friend-name">${u.displayName}</div></div><div><span class="tier-badge">${getTierName(u.tier)} (${u.tier})</span></div></div>`,
-              )
-              .join("");
-        }
-
-        function renderWinners() {
-          let w = document.getElementById("weeklyWinnerBox");
-          let m = document.getElementById("monthlyWinnerBox");
-          if (w)
-            w.innerHTML = `<div class="winner-trophy">🏆</div><div><div class="friend-name">Weekly Leader</div><div class="friend-preview">Coming soon</div></div>`;
-          if (m)
-            m.innerHTML = `<div class="winner-trophy">👑</div><div><div class="friend-name">Monthly Leader</div><div class="friend-preview">Coming soon</div></div>`;
-        }
-
-        // ---------- PROFILE & DELETE ACCOUNT ----------
-        function updateAvatar() {
-          let avatar = document.getElementById("currentUserAvatar");
-          if (!avatar || !currentUser) return;
-          let profile = userProfiles[currentUser];
-          if (profile?.picData) {
-            avatar.style.backgroundImage = `url(${profile.picData})`;
-            avatar.style.backgroundSize = "cover";
-            avatar.innerHTML = "";
-          } else {
-            avatar.style.backgroundImage = "";
-            avatar.innerHTML = "👤";
-          }
-        }
-
-        function saveProfile() {
-          if (!currentUser) return;
-          let newName = document.getElementById("editDisplayName").value.trim();
-          if (newName) users[currentUser].displayName = newName;
-
-          let newPass = document.getElementById("editPassword").value;
-          let confirmPass = document.getElementById(
-            "editConfirmPassword",
-          ).value;
-          if (newPass) {
-            if (newPass !== confirmPass) {
-              alert("Passwords do not match");
-              return;
-            }
-            users[currentUser].pass = btoa(newPass);
-            alert("Password updated! Use your new password next login.");
-          }
-
-          let file = document.getElementById("profilePicInput").files[0];
-          if (file) {
-            let reader = new FileReader();
-            reader.onload = function (e) {
-              if (!userProfiles[currentUser]) userProfiles[currentUser] = {};
-              userProfiles[currentUser].picData = e.target.result;
-              saveAll();
-              updateAvatar();
-              refreshUI();
-            };
-            reader.readAsDataURL(file);
-          } else {
-            saveAll();
-            updateAvatar();
-            refreshUI();
-          }
-          closeModal("editProfileModal");
-          alert("Profile updated!");
-        }
-
-        function deleteAccount() {
-          if (!currentUser) return;
-          if (
-            confirm(
-              "⚠️ Delete your account permanently?\nAll data will be lost!",
-            )
-          ) {
-            Object.keys(users).forEach((u) => {
-              if (users[u] && users[u].friends) {
-                users[u].friends = users[u].friends.filter(
-                  (f) => f !== currentUser,
-                );
-              }
-            });
-            delete friendRequests[currentUser];
-            Object.keys(friendRequests).forEach((u) => {
-              if (friendRequests[u]) {
-                friendRequests[u] = friendRequests[u].filter(
-                  (r) => r.from !== currentUser,
-                );
-              }
-            });
-            groups.forEach((g) => {
-              if (g.members)
-                g.members = g.members.filter((m) => m !== currentUser);
-            });
-            hubs.forEach((h) => {
-              if (h.members)
-                h.members = h.members.filter((m) => m !== currentUser);
-            });
-            delete users[currentUser];
-            delete userTiers[currentUser];
-            delete userProfiles[currentUser];
-            saveAll();
-            logout();
-          }
-        }
-
-        // ---------- MEDIA ATTACHMENTS ----------
-        function setupAttachments() {
-          const attachMenu = document.getElementById("attachMenu");
-          const attachBtn = document.getElementById("attachBtn");
-          attachBtn.onclick = (e) => {
-            e.stopPropagation();
-            attachMenu.classList.toggle("show");
-          };
-          document.addEventListener("click", (e) => {
-            if (!attachBtn.contains(e.target) && !attachMenu.contains(e.target))
-              attachMenu.classList.remove("show");
-          });
-
-          function handleFileUpload(accept, type) {
-            let input = document.createElement("input");
-            input.type = "file";
-            input.accept = accept;
-            input.onchange = (e) => {
-              let file = e.target.files[0];
-              if (file && currentChatId) {
-                let reader = new FileReader();
-                reader.onload = (ev) => {
-                  if (currentChatType === "friend")
-                    sendMediaMessage(
-                      currentChatId,
-                      type,
-                      ev.target.result,
-                      file.name,
-                    );
-                  else if (currentChatType === "group")
-                    sendGroupMediaMessage(
-                      currentChatId,
-                      type,
-                      ev.target.result,
-                      file.name,
-                    );
-                  else if (currentChatType === "hub")
-                    sendHubMediaMessage(
-                      currentChatId,
-                      type,
-                      ev.target.result,
-                      file.name,
-                    );
-                  refreshUI();
-                };
-                reader.readAsDataURL(file);
-              }
-              attachMenu.classList.remove("show");
-            };
-            input.click();
-          }
-
-          document.getElementById("attachImage").onclick = () =>
-            handleFileUpload("image/*", "image");
-          document.getElementById("attachVideo").onclick = () =>
-            handleFileUpload("video/*", "video");
-          document.getElementById("attachFile").onclick = () =>
-            handleFileUpload("*/*", "file");
-        }
-
-        function sendGroupMediaMessage(id, type, data, fileName) {
-          let msg = {
-            id: Date.now(),
-            type,
-            data,
-            fileName,
-            from: currentUser,
-            time: new Date().toLocaleTimeString(),
-            read: false,
-          };
-          if (!groupChats[id]) groupChats[id] = [];
-          groupChats[id].push(msg);
-          saveAll();
-          if (currentChatId == id && currentChatType === "group")
-            renderGroupMessages(id);
-          renderGroups();
-        }
-
-        function sendHubMediaMessage(id, type, data, fileName) {
-          let hub = hubs.find((h) => h.id == id);
-          if (!hub || !hub.members.includes(currentUser)) return;
-          if (!hub.messages) hub.messages = [];
-          let msg = {
-            id: Date.now(),
-            type,
-            data,
-            fileName,
-            from: currentUser,
-            time: new Date().toLocaleTimeString(),
-            read: false,
-          };
-          hub.messages.push(msg);
-          saveAll();
-          if (currentChatId == id && currentChatType === "hub")
-            renderHubMessages(id);
-          renderHubs();
-        }
-
-        // ---------- VOICE RECORDING ----------
-        const voiceBtn = document.getElementById("voiceRecordBtn");
-
-        async function startRecording() {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
-            });
-            mediaRecorderObj = new MediaRecorder(stream);
-            audioChunksArray = [];
-            mediaRecorderObj.ondataavailable = (event) => {
-              audioChunksArray.push(event.data);
-            };
-            mediaRecorderObj.onstop = () => {
-              const audioBlob = new Blob(audioChunksArray, {
-                type: "audio/webm",
-              });
-              const reader = new FileReader();
-              reader.onload = function () {
-                const audioDataUrl = reader.result;
-                if (currentChatId) {
-                  if (currentChatType === "friend")
-                    sendMediaMessage(
-                      currentChatId,
-                      "voice",
-                      audioDataUrl,
-                      "voice.webm",
-                    );
-                  else if (currentChatType === "group")
-                    sendGroupMediaMessage(
-                      currentChatId,
-                      "voice",
-                      audioDataUrl,
-                      "voice.webm",
-                    );
-                  else if (currentChatType === "hub")
-                    sendHubMediaMessage(
-                      currentChatId,
-                      "voice",
-                      audioDataUrl,
-                      "voice.webm",
-                    );
-                  refreshUI();
-                }
-              };
-              reader.readAsDataURL(audioBlob);
-              stream.getTracks().forEach((track) => track.stop());
-              voiceBtn.classList.remove("recording-active");
-              voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-              isRecordingActive = false;
-            };
-            mediaRecorderObj.start();
-            isRecordingActive = true;
-            voiceBtn.classList.add("recording-active");
-            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
-          } catch (err) {
-            alert("Microphone access denied or not available");
-          }
-        }
-
-        function stopRecording() {
-          if (mediaRecorderObj && isRecordingActive) {
-            mediaRecorderObj.stop();
-          }
-        }
-
-        voiceBtn.onclick = () => {
-          if (!currentChatId) {
-            alert("Open a chat first");
-            return;
-          }
-          if (isRecordingActive) {
-            stopRecording();
-          } else {
-            startRecording();
-          }
-        };
-
-        // ---------- EMOJI PICKER ----------
-        function buildEmojiPicker() {
-          let picker = document.getElementById("emojiPicker");
-          if (!picker) return;
-          picker.innerHTML = emojis
-            .map((e) => `<button class="emoji-option">${e}</button>`)
-            .join("");
-          picker.querySelectorAll(".emoji-option").forEach((btn) => {
-            btn.onclick = () => {
-              let input = document.getElementById("messageInput");
-              if (input) input.value += btn.innerText;
-              picker.classList.remove("show");
-            };
-          });
-          document.getElementById("emojiBtn").onclick = (e) => {
-            e.stopPropagation();
-            picker.classList.toggle("show");
-          };
-          document.addEventListener("click", (e) => {
-            if (
-              !document.getElementById("emojiBtn").contains(e.target) &&
-              !picker.contains(e.target)
-            )
-              picker.classList.remove("show");
-          });
-        }
-
-        // ---------- TAG SYSTEM ----------
-        function showTagPopup() {
-          let friends = getFriends(currentUser);
-          if (!friends.length) {
-            alert("No friends to tag");
-            return;
-          }
-          let popup = document.getElementById("tagSearchPopup");
-          let list = document.getElementById("tagFriendsList");
-          let search = document.getElementById("tagSearchInput");
-          if (!popup) return;
-          function render(searchTerm = "") {
-            let filtered = friends.filter((f) =>
-              users[f]?.displayName
-                ?.toLowerCase()
-                .includes(searchTerm.toLowerCase()),
-            );
-            if (!filtered.length) {
-              list.innerHTML =
-                '<div style="padding:12px;text-align:center;color:#888;">No friends</div>';
-              return;
-            }
-            list.innerHTML = filtered
-              .map(
-                (
-                  f,
-                ) => `<div class="tag-friend-item" data-name="${users[f]?.displayName || f}">
-        <div class="tag-friend-avatar">${users[f]?.displayName?.charAt(0) || "👤"}</div>
-        <div class="tag-friend-name">${users[f]?.displayName || f}</div>
-      </div>`,
-              )
-              .join("");
-            document.querySelectorAll(".tag-friend-item").forEach((item) => {
-              item.onclick = () => {
-                let name = item.getAttribute("data-name");
-                let input = document.getElementById("messageInput");
-                if (input) {
-                  input.value += `@${name} `;
-                  input.focus();
-                }
-                popup.classList.remove("show");
-              };
-            });
-          }
-          search.value = "";
-          search.oninput = (e) => render(e.target.value);
-          render("");
-          popup.classList.add("show");
-          search.focus();
-          setTimeout(() => {
-            document.addEventListener("click", function closePopup(e) {
-              if (!popup.contains(e.target) && e.target.id !== "tagBtn") {
-                popup.classList.remove("show");
-                document.removeEventListener("click", closePopup);
-              }
-            });
-          }, 100);
-        }
-
-        // ---------- THEME ----------
-        function toggleTheme() {
-          document.body.classList.toggle("light-theme");
-          localStorage.setItem(
-            "theme",
-            document.body.classList.contains("light-theme") ? "light" : "dark",
-          );
-        }
-
-        // ---------- LOGIN / LOGOUT ----------
-        function doLogin() {
-          let u = document
-            .getElementById("loginUser")
-            .value.trim()
-            .toLowerCase();
-          let p = document.getElementById("loginPass").value;
-          let user = users[u];
-          if (user && user.pass === btoa(p)) {
-            currentUser = u;
-            localStorage.setItem("currentUser", u);
-            document.getElementById("loginModal").classList.add("hidden");
-            refreshUI();
-            updateAvatar();
-            window.showScreen("chats");
-          } else {
-            alert("Invalid! Try alex / alex123");
-          }
-        }
-
-        function doSignup() {
-          let u = document
-            .getElementById("signupUser")
-            .value.trim()
-            .toLowerCase();
-          let p = document.getElementById("signupPass").value;
-          let c = document.getElementById("signupConfirm").value;
-          if (p !== c) {
-            alert("Passwords don't match");
-            return;
-          }
-          if (users[u]) {
-            alert("Username exists");
-            return;
-          }
-          users[u] = { pass: btoa(p), friends: [], displayName: u };
-          userTiers[u] = { tier: 0, lastPostDate: null };
-          saveAll();
-          alert("Account created! Please login.");
+          alert("Account created! Please log in.");
           document.getElementById("signupModal").classList.add("hidden");
           document.getElementById("loginModal").classList.remove("hidden");
+        } catch (err) {
+          alert(err.message);
         }
-
-        function logout() {
-          localStorage.removeItem("currentUser");
-          currentUser = null;
-          closeChat();
-          document.getElementById("loginModal").classList.remove("hidden");
+      }
+      async function loadCurrentUserData(username) {
+        const doc = await db.collection("users").doc(username).get();
+        if (doc.exists) {
+          currentUserDoc = { id: doc.id, ...doc.data() };
+        } else {
+          await db.collection("users").doc(username).set({
+            username: username,
+            displayName: username,
+            friends: [],
+          });
+          currentUserDoc = {
+            id: username,
+            username,
+            displayName: username,
+            friends: [],
+          };
         }
+      }
+      function logout() {
+        auth.signOut();
+        currentUser = null;
+        currentUserDoc = null;
+        currentChatId = null;
+        unsubscribeListeners.forEach((fn) => fn());
+        unsubscribeListeners = [];
+        document.getElementById("loginModal").classList.remove("hidden");
+      }
+      window.logout = logout;
 
-        function closeModal(id) {
-          document.getElementById(id).classList.add("hidden");
+      // ==================== REAL-TIME UI REFRESH ====================
+      function refreshAllUI() {
+        if (!currentUserDoc) return;
+        renderFriends();
+        renderPendingRequests();
+        renderGroups();
+        renderHubs();
+        renderChapters();
+        renderLeaderboard();
+        renderWinners();
+        if (currentChatId && currentChatType === "friend")
+          renderMessages(currentChatId);
+        else if (currentChatId && currentChatType === "group")
+          renderGroupMessages(currentChatId);
+        else if (currentChatId && currentChatType === "hub")
+          renderHubMessages(currentChatId);
+        updateBadges();
+      }
+      function updateBadges() {
+        let totalUnread = 0;
+        document.getElementById("chatsTabBadge").innerHTML = totalUnread;
+        document
+          .getElementById("chatsTabBadge")
+          .classList.toggle("hidden", totalUnread === 0);
+      }
+
+      // ==================== FRIENDS & CHAT (WITH PROFILE PICTURES) ====================
+      async function getUserProfilePic(uid) {
+        const doc = await db.collection("users").doc(uid).get();
+        return doc.exists ? doc.data().profilePic : null;
+      }
+
+      async function renderFriends() {
+        if (!currentUserDoc) return;
+        const friendsList = currentUserDoc.friends || [];
+        const container = document.getElementById("friendsList");
+        if (!container) return;
+        if (friendsList.length === 0) {
+          container.innerHTML =
+            '<div class="empty">No friends yet. Add some!</div>';
+          return;
         }
+        let html = "";
+        for (const friendId of friendsList) {
+          const friendDoc = await db.collection("users").doc(friendId).get();
+          const friendName = friendDoc.exists
+            ? friendDoc.data().displayName
+            : friendId;
+          const friendPic = friendDoc.exists
+            ? friendDoc.data().profilePic
+            : null;
+          const chatId = [currentUserDoc.username, friendId].sort().join("_");
+          const lastMsgSnap = await db
+            .collection("messages")
+            .doc(chatId)
+            .collection("chat")
+            .orderBy("timestamp", "desc")
+            .limit(1)
+            .get();
+          let preview = "Say hello";
+          if (!lastMsgSnap.empty)
+            preview = lastMsgSnap.docs[0].data().text || "Media";
+          const avatarStyle = friendPic
+            ? `style="background-image: url(${friendPic}); background-size: cover;"`
+            : "";
+          html += `<div class="friend-item" onclick="window.openChat('${friendId}','friend')">
+      <div class="friend-avatar" ${avatarStyle}>${!friendPic ? "👤" : ""}</div>
+      <div style="flex:1"><div class="friend-name">${escapeHtml(friendName)}</div><div class="friend-preview">${escapeHtml(preview.substring(0, 50))}</div></div>
+    </div>`;
+        }
+        container.innerHTML = html;
+      }
 
-        window.showImagePreview = function (url) {
-          let modal = document.createElement("div");
-          modal.className = "image-preview-modal";
-          modal.style.position = "fixed";
-          modal.style.top = 0;
-          modal.style.left = 0;
-          modal.style.width = "100%";
-          modal.style.height = "100%";
-          modal.style.background = "rgba(0,0,0,0.95)";
-          modal.style.zIndex = 200;
-          modal.style.display = "flex";
-          modal.style.alignItems = "center";
-          modal.style.justifyContent = "center";
-          modal.onclick = () => modal.remove();
-          let img = document.createElement("img");
-          img.src = url;
-          img.style.maxWidth = "90%";
-          img.style.maxHeight = "90%";
-          img.style.borderRadius = "20px";
-          modal.appendChild(img);
-          document.body.appendChild(modal);
+      async function renderMessages(friendId) {
+        const chatId = [currentUserDoc.username, friendId].sort().join("_");
+        const container = document.getElementById("chatMessages");
+        if (!container) return;
+        if (unsubscribeListeners[0]) unsubscribeListeners[0]();
+        const unsubscribe = db
+          .collection("messages")
+          .doc(chatId)
+          .collection("chat")
+          .orderBy("timestamp")
+          .onSnapshot((snapshot) => {
+            const msgs = [];
+            snapshot.forEach((doc) => msgs.push({ id: doc.id, ...doc.data() }));
+            if (msgs.length === 0) {
+              container.innerHTML = '<div class="empty">No messages yet</div>';
+              return;
+            }
+            container.innerHTML = msgs
+              .map(
+                (m) =>
+                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${escapeHtml(m.text)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
+              )
+              .join("");
+            container.scrollTop = container.scrollHeight;
+          });
+        unsubscribeListeners[0] = unsubscribe;
+      }
+      async function sendTextMessage(to, text) {
+        if (!text.trim()) return;
+        const chatId = [currentUserDoc.username, to].sort().join("_");
+        await db.collection("messages").doc(chatId).collection("chat").add({
+          from: currentUserDoc.username,
+          text: text.trim(),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          read: false,
+        });
+        if (currentChatId === to && currentChatType === "friend")
+          renderMessages(to);
+        renderFriends();
+      }
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        if (!input || !input.value.trim() || !currentChatId) return;
+        if (currentChatType === "friend")
+          sendTextMessage(currentChatId, input.value);
+        input.value = "";
+      }
+      window.sendMessage = sendMessage;
+      window.openChat = function (id, type) {
+        currentChatId = id;
+        currentChatType = type;
+        if (type === "friend") {
+          document.getElementById("chatHeaderName").innerHTML = id;
+          document.getElementById("chatHeaderAvatar").innerHTML = "👤";
+          renderMessages(id);
+        } else if (type === "group") {
+          document.getElementById("chatHeaderName").innerHTML = "Group";
+          document.getElementById("chatHeaderAvatar").innerHTML = "👥";
+          renderGroupMessages(id);
+        } else if (type === "hub") {
+          document.getElementById("chatHeaderName").innerHTML = "Hub";
+          document.getElementById("chatHeaderAvatar").innerHTML = "📡";
+          renderHubMessages(id);
+        }
+        document.getElementById("chatView").classList.add("open");
+      };
+      function closeChat() {
+        currentChatId = null;
+        document.getElementById("chatView").classList.remove("open");
+      }
+      window.closeChat = closeChat;
+
+      // ==================== FRIEND REQUESTS ====================
+      async function renderPendingRequests() {
+        const requestsSnap = await db
+          .collection("friendRequests")
+          .where("to", "==", currentUserDoc.username)
+          .where("status", "==", "pending")
+          .get();
+        const container = document.getElementById("pendingRequestsSection");
+        if (!container) return;
+        if (requestsSnap.empty) {
+          container.innerHTML = "";
+          return;
+        }
+        let html = `<div class="section-title">📨 Pending (${requestsSnap.size})</div>`;
+        requestsSnap.forEach((doc) => {
+          const req = doc.data();
+          html += `<div class="request-item"><div class="request-avatar">👤</div><div style="flex:1"><div class="friend-name">${escapeHtml(req.from)}</div></div><button class="small-btn" onclick="window.acceptReq('${req.from}')">Accept</button><button class="small-btn" onclick="window.denyReq('${req.from}')">Deny</button></div>`;
+        });
+        container.innerHTML = html;
+      }
+      async function sendFriendRequest() {
+        const target = document
+          .getElementById("friendUsername")
+          .value.trim()
+          .toLowerCase();
+        if (!target || target === currentUserDoc.username) {
+          alert("Invalid username");
+          return;
+        }
+        const userRef = await db.collection("users").doc(target).get();
+        if (!userRef.exists) {
+          alert("User not found");
+          return;
+        }
+        if (currentUserDoc.friends.includes(target)) {
+          alert("Already friends!");
+          closeModal("addFriendModal");
+          return;
+        }
+        const existing = await db
+          .collection("friendRequests")
+          .where("from", "==", currentUserDoc.username)
+          .where("to", "==", target)
+          .where("status", "==", "pending")
+          .get();
+        if (!existing.empty) {
+          alert("Request already sent!");
+          return;
+        }
+        await db.collection("friendRequests").add({
+          from: currentUserDoc.username,
+          to: target,
+          status: "pending",
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        alert("Friend request sent!");
+        closeModal("addFriendModal");
+        document.getElementById("friendUsername").value = "";
+      }
+      window.acceptReq = async function (fromUser) {
+        const query = await db
+          .collection("friendRequests")
+          .where("from", "==", fromUser)
+          .where("to", "==", currentUserDoc.username)
+          .where("status", "==", "pending")
+          .get();
+        if (query.empty) return;
+        const doc = query.docs[0];
+        await doc.ref.update({ status: "accepted" });
+        await db
+          .collection("users")
+          .doc(currentUserDoc.username)
+          .update({
+            friends: firebase.firestore.FieldValue.arrayUnion(fromUser),
+          });
+        await db
+          .collection("users")
+          .doc(fromUser)
+          .update({
+            friends: firebase.firestore.FieldValue.arrayUnion(
+              currentUserDoc.username,
+            ),
+          });
+        refreshAllUI();
+        alert(`You are now friends with ${fromUser}`);
+      };
+      window.denyReq = async function (fromUser) {
+        const query = await db
+          .collection("friendRequests")
+          .where("from", "==", fromUser)
+          .where("to", "==", currentUserDoc.username)
+          .where("status", "==", "pending")
+          .get();
+        if (query.empty) return;
+        await query.docs[0].ref.delete();
+        refreshAllUI();
+        alert(`Denied request from ${fromUser}`);
+      };
+
+      // ==================== GROUPS ====================
+      async function renderGroups() {
+        const groupsSnap = await db
+          .collection("groups")
+          .where("members", "array-contains", currentUserDoc.username)
+          .get();
+        const container = document.getElementById("groupsList");
+        if (!container) return;
+        if (groupsSnap.empty) {
+          container.innerHTML =
+            '<div class="empty">No groups yet. Create one!</div>';
+          return;
+        }
+        let html = "";
+        for (const doc of groupsSnap.docs) {
+          const g = doc.data();
+          const lastMsgSnap = await db
+            .collection("groupMessages")
+            .doc(doc.id)
+            .collection("chat")
+            .orderBy("timestamp", "desc")
+            .limit(1)
+            .get();
+          let preview = "No messages";
+          if (!lastMsgSnap.empty)
+            preview = lastMsgSnap.docs[0].data().text || "Media";
+          const avatarStyle = g.picUrl
+            ? `style="background-image: url(${g.picUrl}); background-size: cover;"`
+            : "";
+          html += `<div class="group-item" onclick="window.openChat('${doc.id}','group')">
+      <div class="group-avatar" ${avatarStyle}>${!g.picUrl ? "👥" : ""}</div>
+      <div style="flex:1"><div class="friend-name">${escapeHtml(g.name)}</div><div class="friend-preview">${escapeHtml(preview.substring(0, 50))}</div></div>
+    </div>`;
+        }
+        container.innerHTML = html;
+      }
+      async function renderGroupMessages(groupId) {
+        const container = document.getElementById("chatMessages");
+        if (!container) return;
+        if (unsubscribeListeners[1]) unsubscribeListeners[1]();
+        const unsubscribe = db
+          .collection("groupMessages")
+          .doc(groupId)
+          .collection("chat")
+          .orderBy("timestamp")
+          .onSnapshot((snapshot) => {
+            const msgs = [];
+            snapshot.forEach((doc) => msgs.push({ id: doc.id, ...doc.data() }));
+            if (msgs.length === 0) {
+              container.innerHTML = '<div class="empty">No messages yet</div>';
+              return;
+            }
+            container.innerHTML = msgs
+              .map(
+                (m) =>
+                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${escapeHtml(m.text)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
+              )
+              .join("");
+            container.scrollTop = container.scrollHeight;
+          });
+        unsubscribeListeners[1] = unsubscribe;
+      }
+      async function sendGroupMessage(groupId, text) {
+        if (!text.trim()) return;
+        await db
+          .collection("groupMessages")
+          .doc(groupId)
+          .collection("chat")
+          .add({
+            from: currentUserDoc.username,
+            text: text.trim(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        if (currentChatId === groupId && currentChatType === "group")
+          renderGroupMessages(groupId);
+      }
+      function showCreateGroupModal() {
+        const friends = currentUserDoc.friends || [];
+        let membersHtml = friends
+          .map(
+            (f) =>
+              `<label class="member-checkbox"><input type="checkbox" value="${f}"> ${f}</label>`,
+          )
+          .join("");
+        document.getElementById("groupMembersSelect").innerHTML = membersHtml;
+        document.getElementById("groupAdminsSelect").innerHTML =
+          `<label class="member-checkbox"><input type="checkbox" disabled checked> ${currentUserDoc.username} (Creator)</label>`;
+        document.getElementById("createGroupModal").classList.remove("hidden");
+      }
+      async function createGroup() {
+        const name = document.getElementById("groupName").value.trim();
+        if (!name) {
+          alert("Group name required");
+          return;
+        }
+        const desc = document.getElementById("groupDesc").value;
+        const selectedMembers = [
+          ...document.querySelectorAll("#groupMembersSelect input:checked"),
+        ].map((cb) => cb.value);
+        const members = [currentUserDoc.username, ...selectedMembers];
+        let picUrl = null;
+        const picFile = document.getElementById("groupPicFile").files[0];
+        if (picFile) {
+          const storageRef = storage
+            .ref()
+            .child(`groupPics/${Date.now()}_${picFile.name}`);
+          await storageRef.put(picFile);
+          picUrl = await storageRef.getDownloadURL();
+        }
+        await db.collection("groups").add({
+          name,
+          desc,
+          creator: currentUserDoc.username,
+          admins: [currentUserDoc.username],
+          members,
+          picUrl,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        closeModal("createGroupModal");
+        renderGroups();
+      }
+
+      // ==================== HUBS ====================
+      async function renderHubs() {
+        const hubsSnap = await db
+          .collection("hubs")
+          .where("members", "array-contains", currentUserDoc.username)
+          .get();
+        const container = document.getElementById("hubsList");
+        if (!container) return;
+        if (hubsSnap.empty) {
+          container.innerHTML = '<div class="empty">No hubs</div>';
+          return;
+        }
+        let html = "";
+        for (const doc of hubsSnap.docs) {
+          const h = doc.data();
+          const avatarStyle = h.picUrl
+            ? `style="background-image: url(${h.picUrl}); background-size: cover;"`
+            : "";
+          html += `<div class="hub-item" onclick="window.openChat('${doc.id}','hub')">
+      <div class="hub-avatar" ${avatarStyle}>${!h.picUrl ? "📡" : ""}</div>
+      <div><div class="friend-name">${escapeHtml(h.name)}</div><div class="friend-preview">${h.members.length} members</div></div>
+    </div>`;
+        }
+        container.innerHTML = html;
+      }
+      async function renderHubMessages(hubId) {
+        const container = document.getElementById("chatMessages");
+        if (!container) return;
+        if (unsubscribeListeners[2]) unsubscribeListeners[2]();
+        const unsubscribe = db
+          .collection("hubMessages")
+          .doc(hubId)
+          .collection("chat")
+          .orderBy("timestamp")
+          .onSnapshot((snapshot) => {
+            const msgs = [];
+            snapshot.forEach((doc) => msgs.push({ id: doc.id, ...doc.data() }));
+            if (msgs.length === 0) {
+              container.innerHTML = '<div class="empty">No messages yet</div>';
+              return;
+            }
+            container.innerHTML = msgs
+              .map(
+                (m) =>
+                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${escapeHtml(m.text)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
+              )
+              .join("");
+            container.scrollTop = container.scrollHeight;
+          });
+        unsubscribeListeners[2] = unsubscribe;
+      }
+      async function sendHubMessage(hubId, text) {
+        if (!text.trim()) return;
+        await db.collection("hubMessages").doc(hubId).collection("chat").add({
+          from: currentUserDoc.username,
+          text: text.trim(),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        if (currentChatId === hubId && currentChatType === "hub")
+          renderHubMessages(hubId);
+      }
+      function showCreateHubModal() {
+        document.getElementById("createHubModal").classList.remove("hidden");
+      }
+      async function createHub() {
+        const name = document.getElementById("hubName").value.trim();
+        if (!name) {
+          alert("Hub name required");
+          return;
+        }
+        const desc = document.getElementById("hubDesc").value;
+        const password = document.getElementById("hubPass").value;
+        let picUrl = null;
+        const picFile = document.getElementById("hubPicFile").files[0];
+        if (picFile) {
+          const storageRef = storage
+            .ref()
+            .child(`hubPics/${Date.now()}_${picFile.name}`);
+          await storageRef.put(picFile);
+          picUrl = await storageRef.getDownloadURL();
+        }
+        await db.collection("hubs").add({
+          name,
+          desc,
+          password,
+          creator: currentUserDoc.username,
+          members: [currentUserDoc.username],
+          picUrl,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        closeModal("createHubModal");
+        renderHubs();
+      }
+
+      // ==================== CHAPTERS ====================
+      async function renderChapters() {
+        const chaptersSnap = await db
+          .collection("chapters")
+          .orderBy("timestamp", "desc")
+          .get();
+        const container = document.getElementById("chaptersList");
+        if (!container) return;
+        if (chaptersSnap.empty) {
+          container.innerHTML =
+            '<div class="empty">No chapters yet. Post your first chapter!</div>';
+          return;
+        }
+        let html = "";
+        for (const doc of chaptersSnap.docs) {
+          const c = doc.data();
+          const userDoc = await db.collection("users").doc(c.user).get();
+          const displayName = userDoc.exists
+            ? userDoc.data().displayName
+            : c.user;
+          const tierDoc = await db.collection("tiers").doc(c.user).get();
+          const tier = tierDoc.exists ? tierDoc.data().tier : 0;
+          const isLiked = c.likes && c.likes.includes(currentUserDoc.username);
+          html += `<div class="chapter-card" onclick="window.viewChapter('${doc.id}')">
+      <div class="chapter-header"><div class="chapter-avatar">📖</div><div><div class="chapter-user">${escapeHtml(displayName)} <span class="tier-badge">${getTierName(tier)}</span></div><div class="chapter-time">${formatTime(c.timestamp)}</div></div></div>
+      <div class="chapter-text">${escapeHtml(c.text)}</div>
+      <div class="chapter-stats"><span>❤️ ${c.likes?.length || 0}</span><button class="like-btn ${isLiked ? "liked" : ""}" onclick="event.stopPropagation();window.likeChapter('${doc.id}')"><i class="fas fa-heart"></i></button></div>
+      ${c.user === currentUserDoc.username ? `<button class="delete-chapter" onclick="event.stopPropagation();window.deleteChapter('${doc.id}')">Del</button>` : ""}
+    </div>`;
+        }
+        container.innerHTML = html;
+      }
+      window.viewChapter = async function (id) {
+        const doc = await db.collection("chapters").doc(id).get();
+        if (!doc.exists) return;
+        const c = doc.data();
+        alert(`📖 ${c.text}\n❤️ ${c.likes?.length || 0} likes`);
+      };
+      window.likeChapter = async function (id) {
+        const chapterRef = db.collection("chapters").doc(id);
+        const chapter = await chapterRef.get();
+        if (!chapter.exists) return;
+        const likes = chapter.data().likes || [];
+        let newLikes;
+        if (likes.includes(currentUserDoc.username)) {
+          newLikes = likes.filter((u) => u !== currentUserDoc.username);
+        } else {
+          newLikes = [...likes, currentUserDoc.username];
+        }
+        await chapterRef.update({ likes: newLikes });
+        renderChapters();
+      };
+      window.deleteChapter = async function (id) {
+        if (!confirm("Delete this chapter?")) return;
+        await db.collection("chapters").doc(id).delete();
+        renderChapters();
+      };
+      async function postChapter() {
+        const text = document.getElementById("chapterText").value.trim();
+        if (!text) return;
+        await db.collection("chapters").add({
+          user: currentUserDoc.username,
+          text: text,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          likes: [],
+        });
+        const tierRef = db.collection("tiers").doc(currentUserDoc.username);
+        const tierDoc = await tierRef.get();
+        const currentTier = tierDoc.exists ? tierDoc.data().tier : 0;
+        await tierRef.set(
+          {
+            tier: currentTier + 1,
+            lastPostDate: new Date(),
+            streak: firebase.firestore.FieldValue.increment(1),
+          },
+          { merge: true },
+        );
+        closeModal("chapterModal");
+        document.getElementById("chapterText").value = "";
+        renderChapters();
+        renderLeaderboard();
+        alert("Chapter posted! +1 Tier point");
+      }
+
+      // ==================== LEADERBOARD ====================
+      function getTierName(tier) {
+        if (tier >= 50) return "🏆 LEGEND";
+        if (tier >= 30) return "💎 MASTER";
+        if (tier >= 20) return "🥇 ELITE";
+        if (tier >= 10) return "🥈 ADVANCED";
+        if (tier >= 5) return "🥉 NOVICE";
+        if (tier >= 1) return "🌱 BEGINNER";
+        return "📘 ROOKIE";
+      }
+      async function renderLeaderboard() {
+        const tiersSnap = await db
+          .collection("tiers")
+          .orderBy("tier", "desc")
+          .get();
+        const container = document.getElementById("leaderboardList");
+        if (!container) return;
+        if (tiersSnap.empty) {
+          container.innerHTML = '<div class="empty">No data</div>';
+          return;
+        }
+        let html = `<div class="leaderboard-header"><span>Rank</span><span>User</span><span>Tier</span></div>`;
+        let idx = 1;
+        for (const doc of tiersSnap.docs) {
+          const data = doc.data();
+          const userDoc = await db.collection("users").doc(doc.id).get();
+          const displayName = userDoc.exists
+            ? userDoc.data().displayName
+            : doc.id;
+          html += `<div class="leaderboard-item"><div class="leaderboard-rank">#${idx++}</div><div>🏆</div><div style="flex:1"><div class="friend-name">${escapeHtml(displayName)}</div></div><div><span class="tier-badge">${getTierName(data.tier)} (${data.tier})</span></div></div>`;
+        }
+        container.innerHTML = html;
+      }
+      function renderWinners() {
+        // optional
+      }
+
+      // ==================== PROFILE & DELETE ACCOUNT (WITH SYNCED PICTURE) ====================
+      async function updateAvatar() {
+        const avatar = document.getElementById("currentUserAvatar");
+        if (!avatar || !currentUserDoc) return;
+        const userDoc = await db
+          .collection("users")
+          .doc(currentUserDoc.username)
+          .get();
+        const picUrl = userDoc.data().profilePic;
+        if (picUrl) {
+          avatar.style.backgroundImage = `url(${picUrl})`;
+          avatar.style.backgroundSize = "cover";
+          avatar.innerHTML = "";
+        } else {
+          avatar.style.backgroundImage = "";
+          avatar.innerHTML = "👤";
+        }
+      }
+      async function saveProfile() {
+        const newName = document.getElementById("editDisplayName").value.trim();
+        if (newName) {
+          await db
+            .collection("users")
+            .doc(currentUserDoc.username)
+            .update({ displayName: newName });
+          currentUserDoc.displayName = newName;
+        }
+        const newPass = document.getElementById("editPassword").value;
+        if (newPass) {
+          const confirm = document.getElementById("editConfirmPassword").value;
+          if (newPass !== confirm) {
+            alert("Passwords do not match");
+            return;
+          }
+          const user = auth.currentUser;
+          await user.updatePassword(newPass);
+          alert("Password updated! Use your new password next login.");
+        }
+        const picFile = document.getElementById("profilePicInput").files[0];
+        if (picFile) {
+          const storageRef = storage
+            .ref()
+            .child(`profilePics/${currentUserDoc.username}`);
+          await storageRef.put(picFile);
+          const downloadUrl = await storageRef.getDownloadURL();
+          await db
+            .collection("users")
+            .doc(currentUserDoc.username)
+            .update({ profilePic: downloadUrl });
+          // Update own avatar immediately
+          updateAvatar();
+          // Also refresh friends list so others see new picture (their refresh will pick it up)
+        }
+        closeModal("editProfileModal");
+        refreshAllUI();
+        alert("Profile updated!");
+      }
+      async function deleteAccount() {
+        if (!confirm("Delete your account permanently? All data will be lost."))
+          return;
+        const friends = currentUserDoc.friends || [];
+        for (const friend of friends) {
+          await db
+            .collection("users")
+            .doc(friend)
+            .update({
+              friends: firebase.firestore.FieldValue.arrayRemove(
+                currentUserDoc.username,
+              ),
+            });
+        }
+        const requestsFrom = await db
+          .collection("friendRequests")
+          .where("from", "==", currentUserDoc.username)
+          .get();
+        requestsFrom.forEach((d) => d.ref.delete());
+        const requestsTo = await db
+          .collection("friendRequests")
+          .where("to", "==", currentUserDoc.username)
+          .get();
+        requestsTo.forEach((d) => d.ref.delete());
+        const groupsSnap = await db
+          .collection("groups")
+          .where("members", "array-contains", currentUserDoc.username)
+          .get();
+        for (const doc of groupsSnap.docs) {
+          await doc.ref.update({
+            members: firebase.firestore.FieldValue.arrayRemove(
+              currentUserDoc.username,
+            ),
+          });
+        }
+        await db.collection("users").doc(currentUserDoc.username).delete();
+        await db.collection("tiers").doc(currentUserDoc.username).delete();
+        await auth.currentUser.delete();
+        logout();
+      }
+
+      // ==================== MEDIA, VOICE, EMOJI, TAGS ====================
+      function setupAttachments() {
+        const attachMenu = document.getElementById("attachMenu");
+        const attachBtn = document.getElementById("attachBtn");
+        attachBtn.onclick = (e) => {
+          e.stopPropagation();
+          attachMenu.classList.toggle("show");
         };
-
-        // ---------- INITIALISE & REAL-TIME LOOP ----------
-        function init() {
-          loadAll();
-          let saved = localStorage.getItem("currentUser");
-          if (saved && users[saved]) {
-            currentUser = saved;
-            refreshUI();
-            updateAvatar();
-            window.showScreen("chats");
+        document.addEventListener("click", (e) => {
+          if (!attachBtn.contains(e.target) && !attachMenu.contains(e.target))
+            attachMenu.classList.remove("show");
+        });
+        function handleFileUpload(accept, type) {
+          let input = document.createElement("input");
+          input.type = "file";
+          input.accept = accept;
+          input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file && currentChatId) {
+              const storageRef = storage
+                .ref()
+                .child(`chatMedia/${currentChatId}/${Date.now()}_${file.name}`);
+              await storageRef.put(file);
+              const url = await storageRef.getDownloadURL();
+              if (currentChatType === "friend")
+                sendMediaMessage(currentChatId, type, url, file.name);
+              else if (currentChatType === "group")
+                sendGroupMediaMessage(currentChatId, type, url, file.name);
+              else if (currentChatType === "hub")
+                sendHubMediaMessage(currentChatId, type, url, file.name);
+            }
+            attachMenu.classList.remove("show");
+          };
+          input.click();
+        }
+        document.getElementById("attachImage").onclick = () =>
+          handleFileUpload("image/*", "image");
+        document.getElementById("attachVideo").onclick = () =>
+          handleFileUpload("video/*", "video");
+        document.getElementById("attachFile").onclick = () =>
+          handleFileUpload("*/*", "file");
+      }
+      async function sendMediaMessage(to, type, url, fileName) {
+        const chatId = [currentUserDoc.username, to].sort().join("_");
+        await db.collection("messages").doc(chatId).collection("chat").add({
+          from: currentUserDoc.username,
+          type: type,
+          data: url,
+          fileName: fileName,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        if (currentChatId === to && currentChatType === "friend")
+          renderMessages(to);
+      }
+      async function sendGroupMediaMessage(groupId, type, url, fileName) {
+        await db
+          .collection("groupMessages")
+          .doc(groupId)
+          .collection("chat")
+          .add({
+            from: currentUserDoc.username,
+            type: type,
+            data: url,
+            fileName: fileName,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        if (currentChatId === groupId && currentChatType === "group")
+          renderGroupMessages(groupId);
+      }
+      async function sendHubMediaMessage(hubId, type, url, fileName) {
+        await db.collection("hubMessages").doc(hubId).collection("chat").add({
+          from: currentUserDoc.username,
+          type: type,
+          data: url,
+          fileName: fileName,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        if (currentChatId === hubId && currentChatType === "hub")
+          renderHubMessages(hubId);
+      }
+      // Voice recording
+      let mediaRecorder = null;
+      let audioChunks = [];
+      let isRecording = false;
+      const voiceBtn = document.getElementById("voiceRecordBtn");
+      voiceBtn.onclick = async () => {
+        if (!currentChatId) {
+          alert("Open a chat first");
+          return;
+        }
+        if (isRecording) {
+          mediaRecorder.stop();
+          voiceBtn.classList.remove("recording-active");
+          voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+          isRecording = false;
+        } else {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            const storageRef = storage
+              .ref()
+              .child(`voiceMessages/${Date.now()}.webm`);
+            await storageRef.put(audioBlob);
+            const url = await storageRef.getDownloadURL();
+            if (currentChatType === "friend")
+              sendMediaMessage(currentChatId, "voice", url, "voice.webm");
+            else if (currentChatType === "group")
+              sendGroupMediaMessage(currentChatId, "voice", url, "voice.webm");
+            else if (currentChatType === "hub")
+              sendHubMediaMessage(currentChatId, "voice", url, "voice.webm");
+            stream.getTracks().forEach((t) => t.stop());
+          };
+          mediaRecorder.start();
+          voiceBtn.classList.add("recording-active");
+          voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+          isRecording = true;
+        }
+      };
+      // Emoji picker
+      const emojis = [
+        "😀",
+        "😃",
+        "😄",
+        "😁",
+        "😆",
+        "😅",
+        "😂",
+        "🤣",
+        "😊",
+        "😇",
+        "🙂",
+        "🙃",
+        "😉",
+        "😌",
+        "😍",
+        "🥰",
+        "😘",
+        "😗",
+        "😙",
+        "😚",
+        "😋",
+        "😛",
+        "😝",
+        "😜",
+        "🤪",
+        "🤨",
+        "🧐",
+        "🤓",
+        "😎",
+        "🥸",
+        "🤩",
+        "🥳",
+        "😏",
+        "😒",
+        "😞",
+        "😔",
+        "😟",
+        "😕",
+        "🙁",
+        "☹️",
+        "😣",
+        "😖",
+        "😫",
+        "😩",
+        "🥺",
+        "😢",
+        "😭",
+        "😤",
+        "😠",
+        "😡",
+        "🤬",
+        "🤯",
+        "😳",
+        "🥵",
+        "🥶",
+        "😱",
+        "😨",
+        "😰",
+        "😥",
+        "😓",
+        "🤗",
+        "🤔",
+        "🤭",
+        "🤫",
+        "🤥",
+        "😶",
+        "😐",
+        "😑",
+        "😬",
+        "🙄",
+        "😯",
+        "😦",
+        "😧",
+        "😮",
+        "😲",
+        "🥱",
+        "😴",
+        "🤤",
+        "😪",
+        "😵",
+        "🤐",
+        "🥴",
+        "🤢",
+        "🤮",
+        "🤧",
+        "😷",
+        "🤒",
+        "🤕",
+        "🤑",
+        "🤠",
+        "😈",
+        "👿",
+        "👹",
+        "👺",
+        "🤡",
+        "💩",
+        "👻",
+        "💀",
+        "☠️",
+        "👽",
+        "👾",
+        "🤖",
+        "🎃",
+        "👍",
+        "👎",
+        "👌",
+        "✌️",
+        "🤞",
+        "🤟",
+        "🤘",
+        "🤙",
+        "👈",
+        "👉",
+        "👆",
+        "👇",
+        "☝️",
+        "✋",
+        "🤚",
+        "🖐️",
+        "🖖",
+        "👋",
+        "💪",
+        "🦾",
+        "🖕",
+        "✍️",
+        "🙏",
+        "💄",
+        "💋",
+        "👄",
+        "🦷",
+        "👅",
+        "👂",
+        "🦻",
+        "👃",
+        "👣",
+        "👁️",
+        "👀",
+        "❤️",
+        "🧡",
+        "💛",
+        "💚",
+        "💙",
+        "💜",
+      ];
+      function buildEmojiPicker() {
+        const picker = document.getElementById("emojiPicker");
+        picker.innerHTML = emojis
+          .map((e) => `<button class="emoji-option">${e}</button>`)
+          .join("");
+        picker.querySelectorAll(".emoji-option").forEach((btn) => {
+          btn.onclick = () => {
+            const input = document.getElementById("messageInput");
+            input.value += btn.innerText;
+            picker.classList.remove("show");
+          };
+        });
+        document.getElementById("emojiBtn").onclick = (e) => {
+          e.stopPropagation();
+          picker.classList.toggle("show");
+        };
+        document.addEventListener("click", (e) => {
+          if (
+            !document.getElementById("emojiBtn").contains(e.target) &&
+            !picker.contains(e.target)
+          )
+            picker.classList.remove("show");
+        });
+      }
+      // Tag system
+      function showTagPopup() {
+        const friends = currentUserDoc.friends || [];
+        if (!friends.length) {
+          alert("No friends to tag");
+          return;
+        }
+        const popup = document.getElementById("tagSearchPopup");
+        const list = document.getElementById("tagFriendsList");
+        const search = document.getElementById("tagSearchInput");
+        function render(searchTerm = "") {
+          const filtered = friends.filter((f) =>
+            f.toLowerCase().includes(searchTerm.toLowerCase()),
+          );
+          if (!filtered.length) {
+            list.innerHTML =
+              '<div style="padding:12px;text-align:center;color:#888;">No friends</div>';
+            return;
+          }
+          list.innerHTML = filtered
+            .map(
+              (f) => `<div class="tag-friend-item" data-name="${f}">
+      <div class="tag-friend-avatar">${f.charAt(0).toUpperCase()}</div>
+      <div class="tag-friend-name">${f}</div>
+    </div>`,
+            )
+            .join("");
+          document.querySelectorAll(".tag-friend-item").forEach((item) => {
+            item.onclick = () => {
+              const name = item.getAttribute("data-name");
+              const input = document.getElementById("messageInput");
+              input.value += `@${name} `;
+              input.focus();
+              popup.classList.remove("show");
+            };
+          });
+        }
+        search.value = "";
+        search.oninput = (e) => render(e.target.value);
+        render("");
+        popup.classList.add("show");
+        search.focus();
+        setTimeout(() => {
+          document.addEventListener("click", function closePopup(e) {
+            if (!popup.contains(e.target) && e.target.id !== "tagBtn") {
+              popup.classList.remove("show");
+              document.removeEventListener("click", closePopup);
+            }
+          });
+        }, 100);
+      }
+      // Theme
+      function toggleTheme() {
+        document.body.classList.toggle("light-theme");
+        localStorage.setItem(
+          "theme",
+          document.body.classList.contains("light-theme") ? "light" : "dark",
+        );
+      }
+      // Initialisation
+      document.addEventListener("DOMContentLoaded", async () => {
+        buildEmojiPicker();
+        setupAttachments();
+        document.getElementById("themeBtn").onclick = toggleTheme;
+        document.getElementById("editProfileBtn").onclick = () =>
+          document
+            .getElementById("editProfileModal")
+            .classList.remove("hidden");
+        document.getElementById("saveProfileBtn").onclick = saveProfile;
+        document.getElementById("deleteAccountBtn").onclick = deleteAccount;
+        document.getElementById("closeProfileModal").onclick = () =>
+          closeModal("editProfileModal");
+        document.getElementById("addFriendBtn").onclick = () =>
+          document.getElementById("addFriendModal").classList.remove("hidden");
+        document.getElementById("sendRequestBtn").onclick = sendFriendRequest;
+        document.getElementById("closeAddFriendModal").onclick = () =>
+          closeModal("addFriendModal");
+        document.getElementById("createGroupBtn").onclick =
+          showCreateGroupModal;
+        document.getElementById("createGroupSubmitBtn").onclick = createGroup;
+        document.getElementById("closeGroupModal").onclick = () =>
+          closeModal("createGroupModal");
+        document.getElementById("createHubBtn").onclick = showCreateHubModal;
+        document.getElementById("createHubSubmitBtn").onclick = createHub;
+        document.getElementById("closeHubModal").onclick = () =>
+          closeModal("createHubModal");
+        document.getElementById("newChapterBtn").onclick = () =>
+          document.getElementById("chapterModal").classList.remove("hidden");
+        document.getElementById("postChapterBtn").onclick = postChapter;
+        document.getElementById("closeChapterModal").onclick = () =>
+          closeModal("chapterModal");
+        document.getElementById("closeChatBtn").onclick = closeChat;
+        document.getElementById("sendMsgBtn").onclick = sendMessage;
+        document.getElementById("messageInput").onkeypress = (e) => {
+          if (e.key === "Enter") sendMessage();
+        };
+        document.getElementById("tagBtn").onclick = (e) => {
+          e.stopPropagation();
+          showTagPopup();
+        };
+        document.getElementById("groupPicFile").onchange = function (e) {
+          if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const preview = document.getElementById("groupPicPreview");
+              preview.innerHTML = "";
+              preview.style.backgroundImage = `url(${ev.target.result})`;
+              preview.style.backgroundSize = "cover";
+            };
+            reader.readAsDataURL(e.target.files[0]);
+          }
+        };
+        document.getElementById("hubPicFile").onchange = function (e) {
+          if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const preview = document.getElementById("hubPicPreview");
+              preview.innerHTML = "";
+              preview.style.backgroundImage = `url(${ev.target.result})`;
+              preview.style.backgroundSize = "cover";
+            };
+            reader.readAsDataURL(e.target.files[0]);
+          }
+        };
+        document.getElementById("loginBtn").onclick = doLogin;
+        document.getElementById("signupBtn").onclick = doSignup;
+        document.getElementById("showSignupLink").onclick = () => {
+          document.getElementById("loginModal").classList.add("hidden");
+          document.getElementById("signupModal").classList.remove("hidden");
+        };
+        document.getElementById("showLoginLink").onclick = () => {
+          document.getElementById("signupModal").classList.add("hidden");
+          document.getElementById("loginModal").classList.remove("hidden");
+        };
+        window.closeChat = closeChat;
+        auth.onAuthStateChanged(async (user) => {
+          if (user) {
+            const email = user.email;
+            const username = email.replace("@chatrix.local", "");
+            await loadCurrentUserData(username);
             document.getElementById("loginModal").classList.add("hidden");
+            refreshAllUI();
+            updateAvatar();
+            showScreen("chats");
           } else {
             document.getElementById("loginModal").classList.remove("hidden");
           }
-
-          // Event listeners
-          document.getElementById("loginBtn").onclick = doLogin;
-          document.getElementById("signupBtn").onclick = doSignup;
-          document.getElementById("showSignupLink").onclick = () => {
-            document.getElementById("loginModal").classList.add("hidden");
-            document.getElementById("signupModal").classList.remove("hidden");
-          };
-          document.getElementById("showLoginLink").onclick = () => {
-            document.getElementById("signupModal").classList.add("hidden");
-            document.getElementById("loginModal").classList.remove("hidden");
-          };
-          document.getElementById("logoutBtn").onclick = logout;
-          document.getElementById("themeBtn").onclick = toggleTheme;
-          document.getElementById("editProfileBtn").onclick = () =>
-            document
-              .getElementById("editProfileModal")
-              .classList.remove("hidden");
-          document.getElementById("saveProfileBtn").onclick = saveProfile;
-          document.getElementById("deleteAccountBtn").onclick = deleteAccount;
-          document.getElementById("closeProfileModal").onclick = () =>
-            closeModal("editProfileModal");
-          document.getElementById("addFriendBtn").onclick = () =>
-            document
-              .getElementById("addFriendModal")
-              .classList.remove("hidden");
-          document.getElementById("sendRequestBtn").onclick = sendFriendRequest;
-          document.getElementById("closeAddFriendModal").onclick = () =>
-            closeModal("addFriendModal");
-          document.getElementById("createGroupBtn").onclick =
-            showCreateGroupModal;
-          document.getElementById("createGroupSubmitBtn").onclick = createGroup;
-          document.getElementById("closeGroupModal").onclick = () =>
-            closeModal("createGroupModal");
-          document.getElementById("createHubBtn").onclick = showCreateHubModal;
-          document.getElementById("createHubSubmitBtn").onclick = createHub;
-          document.getElementById("closeHubModal").onclick = () =>
-            closeModal("createHubModal");
-          document.getElementById("newChapterBtn").onclick = () =>
-            document.getElementById("chapterModal").classList.remove("hidden");
-          document.getElementById("postChapterBtn").onclick = postChapter;
-          document.getElementById("closeChapterModal").onclick = () =>
-            closeModal("chapterModal");
-          document.getElementById("closeChatBtn").onclick = closeChat;
-          document.getElementById("sendMsgBtn").onclick = sendMessage;
-          document.getElementById("messageInput").onkeypress = (e) => {
-            if (e.key === "Enter") sendMessage();
-          };
-          document.getElementById("tagBtn").onclick = (e) => {
-            e.stopPropagation();
-            showTagPopup();
-          };
-
-          // Group/Hub picture previews
-          document.getElementById("groupPicFile").onchange = function (e) {
-            if (e.target.files && e.target.files[0]) {
-              let reader = new FileReader();
-              reader.onload = function (ev) {
-                let preview = document.getElementById("groupPicPreview");
-                preview.innerHTML = "";
-                preview.style.backgroundImage = `url(${ev.target.result})`;
-                preview.style.backgroundSize = "cover";
-              };
-              reader.readAsDataURL(e.target.files[0]);
-            }
-          };
-          document.getElementById("hubPicFile").onchange = function (e) {
-            if (e.target.files && e.target.files[0]) {
-              let reader = new FileReader();
-              reader.onload = function (ev) {
-                let preview = document.getElementById("hubPicPreview");
-                preview.innerHTML = "";
-                preview.style.backgroundImage = `url(${ev.target.result})`;
-                preview.style.backgroundSize = "cover";
-              };
-              reader.readAsDataURL(e.target.files[0]);
-            }
-          };
-
-          buildEmojiPicker();
-          setupAttachments();
-
-          window.closeChat = closeChat;
-
-          // REAL-TIME UPDATES every 2 seconds
-          setInterval(() => {
-            if (currentUser) refreshUI();
-          }, 2000);
-        }
-
-        init();
-      })();
+        });
+      });
     </script>
   </body>
 </html>
