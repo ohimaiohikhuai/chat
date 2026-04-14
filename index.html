@@ -1,0 +1,2543 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Chatrix | Real‑time Chat</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300d4ff'%3E%3Cpath d='M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        background: #000;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      body.light-theme {
+        background: #e0e0e0;
+      }
+      body.light-theme .phone {
+        background: #ffffff;
+      }
+      body.light-theme .friend-item,
+      body.light-theme .group-item,
+      body.light-theme .hub-item,
+      body.light-theme .header,
+      body.light-theme .chapter-card,
+      body.light-theme .request-item {
+        background: #f5f5f5;
+      }
+      body.light-theme .friend-name,
+      body.light-theme .hub-name {
+        color: #1a1a1a;
+      }
+      body.light-theme .chat-messages {
+        background: #fafafa;
+      }
+      body.light-theme .message-received {
+        background: #e4e6eb;
+        color: #050505;
+      }
+      .phone {
+        width: 375px;
+        height: 700px;
+        background: #0a0a0a;
+        border-radius: 40px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+      }
+      .tabs {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        background: #121212;
+        border-top: 1px solid #333;
+        z-index: 10;
+      }
+      .tab {
+        flex: 1;
+        text-align: center;
+        padding: 12px;
+        color: #888;
+        font-size: 20px;
+        cursor: pointer;
+        position: relative;
+      }
+      .tab.active {
+        color: #00d4ff;
+        border-top: 2px solid #00d4ff;
+        background: #1a1a1a;
+      }
+      .tab span {
+        font-size: 11px;
+        display: block;
+      }
+      .tab-badge {
+        position: absolute;
+        top: 4px;
+        right: 20px;
+        background: #ff3b30;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 6px;
+        font-size: 10px;
+        min-width: 18px;
+      }
+      .screen {
+        height: calc(100% - 50px);
+        overflow-y: auto;
+        display: none;
+        padding: 16px;
+      }
+      .screen.active {
+        display: block;
+      }
+      .header {
+        background: #121212;
+        padding: 16px;
+        border-radius: 20px;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+      }
+      .header-right {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .app-logo {
+        width: 36px;
+        height: 36px;
+        background: #00d4ff;
+        border-radius: 50% 50% 45% 45%;
+        position: relative;
+        animation: float 2s ease-in-out infinite;
+      }
+      .app-logo .eyes {
+        position: absolute;
+        top: 10px;
+        left: 7px;
+        right: 7px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .app-logo .eyes span {
+        width: 8px;
+        height: 8px;
+        background: #0a0a0a;
+        border-radius: 50%;
+      }
+      .app-logo .mouth {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 10px;
+        height: 5px;
+        background: #0a0a0a;
+        border-radius: 0 0 8px 8px;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-3px);
+        }
+      }
+      .logo-text {
+        font-size: 22px;
+        font-weight: bold;
+        background: linear-gradient(135deg, #00d4ff, #0088ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #1a2a3a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #00d4ff;
+        overflow: hidden;
+        background-size: cover;
+        cursor: pointer;
+      }
+      .icon-btn,
+      .exit-btn {
+        background: rgba(0, 212, 255, 0.2);
+        border: 1px solid #00d4ff;
+        color: #00d4ff;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+      }
+      .download-btn,
+      .video-call-btn {
+        background: #00d4ff;
+        color: black;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .exit-btn {
+        background: rgba(255, 60, 60, 0.3);
+        border: none;
+        color: white;
+      }
+      .add-friend,
+      .new-chapter {
+        background: rgba(0, 212, 255, 0.15);
+        border: 1px solid #00d4ff;
+        color: #00d4ff;
+        padding: 10px;
+        border-radius: 30px;
+        width: 100%;
+        margin-bottom: 12px;
+        cursor: pointer;
+        text-align: center;
+      }
+      .new-chapter {
+        background: #00d4ff;
+        color: black;
+        font-weight: bold;
+      }
+      .prompt-box {
+        background: linear-gradient(135deg, #00d4ff22, #0088ff22);
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 16px;
+        border: 1px solid #00d4ff44;
+      }
+      .friend-item,
+      .group-item,
+      .hub-item,
+      .request-item,
+      .leaderboard-item,
+      .winner-card {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: #121212;
+        margin-bottom: 8px;
+        border-radius: 16px;
+        cursor: pointer;
+        position: relative;
+      }
+      .friend-avatar,
+      .group-avatar,
+      .hub-avatar,
+      .request-avatar {
+        width: 50px;
+        height: 50px;
+        background: #1a2a3a;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-right: 12px;
+        overflow: hidden;
+        background-size: cover;
+      }
+      .friend-name {
+        color: white;
+        font-weight: bold;
+      }
+      .friend-preview {
+        color: #888;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      .notification-badge {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #ff3b30;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 11px;
+      }
+      .tier-badge {
+        background: linear-gradient(135deg, #ffd700, #ff8c00);
+        color: #000;
+        font-weight: bold;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        margin-left: 8px;
+      }
+      .leaderboard-rank {
+        font-weight: bold;
+        font-size: 18px;
+        margin-right: 12px;
+        color: #ffd700;
+        min-width: 30px;
+      }
+      .chat-view {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0a0a0a;
+        z-index: 20;
+        transform: translateX(100%);
+        transition: 0.3s;
+        display: flex;
+        flex-direction: column;
+      }
+      .chat-view.open {
+        transform: translateX(0);
+      }
+      .chat-header {
+        background: #00d4ff;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        color: black;
+        font-weight: bold;
+      }
+      .chat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .chat-header-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        overflow: hidden;
+        background-size: cover;
+      }
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .message-bubble {
+        max-width: 80%;
+        padding: 8px 12px;
+        border-radius: 20px;
+        word-break: break-word;
+      }
+      .message-sent {
+        background: #00d4ff;
+        color: black;
+        align-self: flex-end;
+      }
+      .message-received {
+        background: #2c2c2e;
+        color: white;
+        align-self: flex-start;
+      }
+      .message-time {
+        font-size: 10px;
+        opacity: 0.7;
+        margin-top: 4px;
+      }
+      .media-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 12px;
+        cursor: pointer;
+        margin-top: 5px;
+      }
+      .file-message {
+        background: rgba(0, 212, 255, 0.2);
+        padding: 8px 12px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .voice-message {
+        background: rgba(0, 212, 255, 0.2);
+        padding: 8px 12px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .chat-input {
+        display: flex;
+        padding: 12px;
+        gap: 8px;
+        background: #1c1c1e;
+        border-top: 1px solid #333;
+        flex-wrap: wrap;
+      }
+      .chat-input input {
+        flex: 1;
+        background: #2c2c2e;
+        border: none;
+        border-radius: 25px;
+        padding: 10px;
+        color: white;
+        outline: none;
+      }
+      .chat-input button {
+        background: #00d4ff;
+        border: none;
+        border-radius: 25px;
+        padding: 10px 18px;
+        font-weight: bold;
+        cursor: pointer;
+        color: black;
+      }
+      .attach-btn,
+      .tag-btn,
+      .emoji-btn,
+      .voice-record-btn {
+        background: #2c2c2e;
+        border: none;
+        border-radius: 25px;
+        padding: 10px 14px;
+        color: white;
+        cursor: pointer;
+      }
+      .emoji-picker,
+      .tag-search-popup,
+      .attach-menu {
+        position: absolute;
+        bottom: 70px;
+        left: 12px;
+        background: #1c1c1e;
+        border-radius: 20px;
+        padding: 12px;
+        z-index: 40;
+        border: 1px solid #00d4ff55;
+        display: none;
+      }
+      .emoji-picker.show {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+        max-width: 300px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .tag-search-popup.show {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 200px;
+      }
+      .attach-menu.show {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        min-width: 200px;
+      }
+      .tag-search-input {
+        width: 100%;
+        padding: 8px;
+        border-radius: 20px;
+        border: none;
+        background: #2c2c2e;
+        color: white;
+        outline: none;
+      }
+      .tag-friend-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .tag-friend-item:hover {
+        background: #00d4ff33;
+      }
+      .emoji-option {
+        background: #1c1c1e;
+        border: none;
+        border-radius: 40px;
+        padding: 8px;
+        cursor: pointer;
+        font-size: 20px;
+      }
+      .chapter-card {
+        background: #1a1a1a;
+        border-radius: 20px;
+        padding: 16px;
+        margin-bottom: 16px;
+        border-left: 4px solid #00d4ff;
+        cursor: pointer;
+        position: relative;
+      }
+      .chapter-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .chapter-avatar {
+        width: 40px;
+        height: 40px;
+        background: #1a2a3a;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+      .chapter-user {
+        font-weight: bold;
+        color: white;
+      }
+      .chapter-time {
+        font-size: 10px;
+        color: #888;
+      }
+      .chapter-text {
+        color: #ccc;
+        font-size: 14px;
+        margin-top: 8px;
+      }
+      .chapter-stats {
+        display: flex;
+        gap: 16px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: #888;
+      }
+      .like-btn {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .like-btn.liked {
+        color: #ff4466;
+      }
+      .delete-chapter {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(255, 60, 60, 0.3);
+        border: none;
+        color: #ff6666;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        cursor: pointer;
+      }
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-card {
+        background: #1c1c1e;
+        border-radius: 30px;
+        padding: 24px;
+        width: 90%;
+        text-align: center;
+        border: 1px solid #00d4ff;
+        max-height: 80%;
+        overflow-y: auto;
+      }
+      .modal-card input,
+      .modal-card textarea,
+      .modal-card select {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        background: #2c2c2e;
+        border: none;
+        border-radius: 30px;
+        color: white;
+      }
+      .modal-card button {
+        background: #00d4ff;
+        border: none;
+        border-radius: 30px;
+        padding: 12px;
+        width: 100%;
+        margin-top: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        color: black;
+      }
+      .modal-card .danger-button {
+        background: #ff4444;
+        color: white;
+      }
+      .member-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-bottom: 0.5px solid #333;
+      }
+      .link {
+        color: #00d4ff;
+        margin-top: 12px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .empty {
+        text-align: center;
+        color: #666;
+        padding: 40px;
+      }
+      .small-btn {
+        background: rgba(0, 212, 255, 0.15);
+        border: 1px solid #00d4ff;
+        color: #00d4ff;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        cursor: pointer;
+        margin-left: 8px;
+      }
+      .profile-pic {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #1a2a3a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        margin: 0 auto 12px;
+        overflow: hidden;
+        background-size: cover;
+      }
+      .mention {
+        color: #00d4ff;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .section-title {
+        color: #00d4ff;
+        margin: 16px 0 8px 0;
+        font-size: 14px;
+      }
+      .winner-trophy {
+        font-size: 24px;
+        margin-right: 12px;
+      }
+      .leaderboard-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding: 8px;
+        background: #1a1a1a;
+        border-radius: 16px;
+        color: #00d4ff;
+        font-weight: bold;
+      }
+      .recording-active {
+        background: #ff4444 !important;
+        color: white !important;
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone">
+      <div class="tabs">
+        <div
+          class="tab active"
+          data-tab="chats"
+          onclick="window.showScreen('chats')"
+        >
+          <i class="fas fa-comment-dots"></i><span>Chats</span
+          ><span id="chatsTabBadge" class="tab-badge hidden">0</span>
+        </div>
+        <div
+          class="tab"
+          data-tab="groups"
+          onclick="window.showScreen('groups')"
+        >
+          <i class="fas fa-users"></i><span>Groups</span
+          ><span id="groupsTabBadge" class="tab-badge hidden">0</span>
+        </div>
+        <div class="tab" data-tab="hubs" onclick="window.showScreen('hubs')">
+          <i class="fas fa-layer-group"></i><span>Hubs</span
+          ><span id="hubsTabBadge" class="tab-badge hidden">0</span>
+        </div>
+        <div
+          class="tab"
+          data-tab="chapters"
+          onclick="window.showScreen('chapters')"
+        >
+          <i class="fas fa-book-open"></i><span>Chapters</span
+          ><span id="chaptersTabBadge" class="tab-badge hidden">0</span>
+        </div>
+        <div
+          class="tab"
+          data-tab="leaderboard"
+          onclick="window.showScreen('leaderboard')"
+        >
+          <i class="fas fa-trophy"></i><span>Tiers</span>
+        </div>
+        <div
+          class="tab"
+          data-tab="winners"
+          onclick="window.showScreen('winners')"
+        >
+          <i class="fas fa-crown"></i><span>Winners</span>
+        </div>
+      </div>
+
+      <div id="chatsScreen" class="screen active">
+        <div class="header">
+          <div class="header-left">
+            <div class="app-logo">
+              <div class="eyes"><span></span><span></span></div>
+              <div class="mouth"></div>
+            </div>
+            <div class="logo-text">Chatrix</div>
+            <div class="user-avatar" id="currentUserAvatar">👤</div>
+          </div>
+          <div class="header-right">
+            <a
+              href="https://web2apk.online/build_app.php?weburl=https%3A%2F%2Fchatrix.vercel.app%2F"
+              class="download-btn"
+              target="_blank"
+              ><i class="fas fa-download"></i> Download App</a
+            >
+            <a
+              href="https://chatrixcall.vercel.app/"
+              class="video-call-btn"
+              target="_blank"
+              ><i class="fas fa-video"></i> Video Call</a
+            >
+            <button class="icon-btn" id="themeBtn">
+              <i class="fas fa-sun"></i>
+            </button>
+            <button class="icon-btn" id="editProfileBtn">
+              <i class="fas fa-user-edit"></i>
+            </button>
+            <button class="exit-btn" id="logoutBtn">Exit</button>
+          </div>
+        </div>
+        <button class="add-friend" id="addFriendBtn">+ Add Friend</button>
+        <div id="pendingRequestsSection"></div>
+        <div id="friendsList"></div>
+      </div>
+
+      <div id="groupsScreen" class="screen">
+        <div class="header">
+          <div class="app-logo">
+            <div class="eyes"><span></span><span></span></div>
+            <div class="mouth"></div>
+          </div>
+          <div class="logo-text">Groups</div>
+          <div></div>
+        </div>
+        <button class="add-friend" id="createGroupBtn">+ Create Group</button>
+        <div id="groupsList"></div>
+      </div>
+
+      <div id="hubsScreen" class="screen">
+        <div class="header">
+          <div class="app-logo">
+            <div class="eyes"><span></span><span></span></div>
+            <div class="mouth"></div>
+          </div>
+          <div class="logo-text">Hubs</div>
+          <div></div>
+        </div>
+        <button class="add-friend" id="createHubBtn">+ Create Hub</button>
+        <div id="hubsList"></div>
+      </div>
+
+      <div id="chaptersScreen" class="screen">
+        <div class="header">
+          <div class="app-logo">
+            <div class="eyes"><span></span><span></span></div>
+            <div class="mouth"></div>
+          </div>
+          <div class="logo-text">Chapters</div>
+          <div></div>
+        </div>
+        <div class="prompt-box">
+          <p>📖 Post a chapter daily to increase your TIER!</p>
+          <button class="new-chapter" id="newChapterBtn">+ New Chapter</button>
+        </div>
+        <div id="chaptersList"></div>
+      </div>
+
+      <div id="leaderboardScreen" class="screen">
+        <div class="header">
+          <div class="app-logo">
+            <div class="eyes"><span></span><span></span></div>
+            <div class="mouth"></div>
+          </div>
+          <div class="logo-text">Tier Leaderboard</div>
+          <div></div>
+        </div>
+        <div id="leaderboardList"></div>
+      </div>
+
+      <div id="winnersScreen" class="screen">
+        <div class="header">
+          <div class="app-logo">
+            <div class="eyes"><span></span><span></span></div>
+            <div class="mouth"></div>
+          </div>
+          <div class="logo-text">🏆 Chat Leaders</div>
+          <div></div>
+        </div>
+        <div id="weeklyWinnerBox" class="winner-card"></div>
+        <div id="monthlyWinnerBox" class="winner-card"></div>
+      </div>
+
+      <div id="chatView" class="chat-view">
+        <div class="chat-header">
+          <div class="chat-header-left" id="closeChatBtn">
+            <i class="fas fa-arrow-left"></i>
+            <div class="chat-header-avatar" id="chatHeaderAvatar">👤</div>
+            <span id="chatHeaderName">Back</span>
+          </div>
+        </div>
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input">
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Type a message..."
+          />
+          <button class="emoji-btn" id="emojiBtn">
+            <i class="far fa-smile-wink"></i>
+          </button>
+          <button class="attach-btn" id="attachBtn">
+            <i class="fas fa-paperclip"></i>
+          </button>
+          <button class="tag-btn" id="tagBtn"><i class="fas fa-at"></i></button>
+          <button class="voice-record-btn" id="voiceRecordBtn">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <button id="sendMsgBtn">Send</button>
+        </div>
+        <div id="attachMenu" class="attach-menu">
+          <button id="attachImage"><i class="fas fa-image"></i> Image</button>
+          <button id="attachVideo"><i class="fas fa-video"></i> Video</button>
+          <button id="attachFile"><i class="fas fa-file"></i> File</button>
+        </div>
+        <div id="emojiPicker" class="emoji-picker"></div>
+        <div id="tagSearchPopup" class="tag-search-popup">
+          <input
+            type="text"
+            id="tagSearchInput"
+            class="tag-search-input"
+            placeholder="Search friends..."
+          />
+          <div id="tagFriendsList"></div>
+        </div>
+      </div>
+
+      <!-- Modals -->
+      <div id="editProfileModal" class="modal hidden">
+        <div class="modal-card">
+          <h3>Edit Profile</h3>
+          <div id="profilePicPreview" class="profile-pic">👤</div>
+          <input type="file" id="profilePicInput" accept="image/*" />
+          <input type="text" id="editDisplayName" placeholder="Display Name" />
+          <input
+            type="password"
+            id="editPassword"
+            placeholder="New Password (leave blank to keep current)"
+          />
+          <input
+            type="password"
+            id="editConfirmPassword"
+            placeholder="Confirm New Password"
+          />
+          <button id="saveProfileBtn">Save Changes</button>
+          <button class="danger-button" id="deleteAccountBtn">
+            Delete Account
+          </button>
+          <button id="closeProfileModal">Cancel</button>
+        </div>
+      </div>
+
+      <div id="createGroupModal" class="modal hidden">
+        <div class="modal-card">
+          <h3>Create Group</h3>
+          <input type="text" id="groupName" placeholder="Group Name" /><textarea
+            id="groupDesc"
+            placeholder="Description"
+            rows="2"
+          ></textarea
+          ><input type="file" id="groupPicFile" accept="image/*" />
+          <div
+            id="groupPicPreview"
+            class="profile-pic"
+            style="width: 60px; height: 60px"
+          >
+            👥
+          </div>
+          <div id="groupMembersSelect"></div>
+          <div id="groupAdminsSelect" style="margin-top: 10px"></div>
+          <button id="createGroupSubmitBtn">Create</button
+          ><button id="closeGroupModal">Cancel</button>
+        </div>
+      </div>
+
+      <div id="createHubModal" class="modal hidden">
+        <div class="modal-card">
+          <h3>Create Hub</h3>
+          <input type="text" id="hubName" placeholder="Hub Name" /><textarea
+            id="hubDesc"
+            placeholder="Description"
+            rows="2"
+          ></textarea
+          ><input
+            type="password"
+            id="hubPass"
+            placeholder="Password (optional)"
+          /><input type="file" id="hubPicFile" accept="image/*" />
+          <div
+            id="hubPicPreview"
+            class="profile-pic"
+            style="width: 60px; height: 60px"
+          >
+            📡
+          </div>
+          <button id="createHubSubmitBtn">Create</button
+          ><button id="closeHubModal">Cancel</button>
+        </div>
+      </div>
+
+      <div id="chapterModal" class="modal hidden">
+        <div class="modal-card">
+          <input
+            type="text"
+            id="chapterText"
+            placeholder="What's your vibe today? (+1 Tier point!)"
+          /><button id="postChapterBtn">Post Chapter</button
+          ><button id="closeChapterModal">Cancel</button>
+        </div>
+      </div>
+      <div id="addFriendModal" class="modal hidden">
+        <div class="modal-card">
+          <h3>Add Friend</h3>
+          <input
+            type="text"
+            id="friendUsername"
+            placeholder="Username (case-insensitive)"
+          /><button id="sendRequestBtn">Send Request</button
+          ><button id="closeAddFriendModal">Cancel</button>
+        </div>
+      </div>
+
+      <div id="loginModal" class="modal">
+        <div class="modal-card">
+          <div
+            class="app-logo"
+            style="margin: 0 auto 12px; width: 60px; height: 60px"
+          >
+            <div class="eyes"><span></span><span></span></div>
+            <div class="mouth"></div>
+          </div>
+          <h2>Chatrix</h2>
+          <input
+            type="text"
+            id="loginUser"
+            placeholder="Username"
+            value="alex"
+          /><input
+            type="password"
+            id="loginPass"
+            placeholder="Password"
+            value="alex123"
+          /><button id="loginBtn">Log In</button>
+          <div class="link" id="showSignupLink">Sign up</div>
+        </div>
+      </div>
+      <div id="signupModal" class="modal hidden">
+        <div class="modal-card">
+          <h2>Sign Up</h2>
+          <input type="text" id="signupUser" placeholder="Username" /><input
+            type="password"
+            id="signupPass"
+            placeholder="Password"
+          /><input
+            type="password"
+            id="signupConfirm"
+            placeholder="Confirm Password"
+          /><button id="signupBtn">Sign Up</button>
+          <div class="link" id="showLoginLink">Log in</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script>
+      (function () {
+        // ---------- DATA ----------
+        let currentUser = null;
+        let currentChatId = null;
+        let currentChatType = "friend";
+        let users = {};
+        let messages = {};
+        let chapters = [];
+        let hubs = [];
+        let groups = [];
+        let userProfiles = {};
+        let groupChats = {};
+        let friendRequests = {};
+        let userTiers = {};
+
+        let mediaRecorderObj = null;
+        let audioChunksArray = [];
+        let isRecordingActive = false;
+
+        const emojis = [
+          "😀",
+          "😃",
+          "😄",
+          "😁",
+          "😆",
+          "😅",
+          "😂",
+          "🤣",
+          "😊",
+          "😇",
+          "🙂",
+          "🙃",
+          "😉",
+          "😌",
+          "😍",
+          "🥰",
+          "😘",
+          "😗",
+          "😙",
+          "😚",
+          "😋",
+          "😛",
+          "😝",
+          "😜",
+          "🤪",
+          "🤨",
+          "🧐",
+          "🤓",
+          "😎",
+          "🥸",
+          "🤩",
+          "🥳",
+          "😏",
+          "😒",
+          "😞",
+          "😔",
+          "😟",
+          "😕",
+          "🙁",
+          "☹️",
+          "😣",
+          "😖",
+          "😫",
+          "😩",
+          "🥺",
+          "😢",
+          "😭",
+          "😤",
+          "😠",
+          "😡",
+          "🤬",
+          "🤯",
+          "😳",
+          "🥵",
+          "🥶",
+          "😱",
+          "😨",
+          "😰",
+          "😥",
+          "😓",
+          "🤗",
+          "🤔",
+          "🤭",
+          "🤫",
+          "🤥",
+          "😶",
+          "😐",
+          "😑",
+          "😬",
+          "🙄",
+          "😯",
+          "😦",
+          "😧",
+          "😮",
+          "😲",
+          "🥱",
+          "😴",
+          "🤤",
+          "😪",
+          "😵",
+          "🤐",
+          "🥴",
+          "🤢",
+          "🤮",
+          "🤧",
+          "😷",
+          "🤒",
+          "🤕",
+          "🤑",
+          "🤠",
+          "😈",
+          "👿",
+          "👹",
+          "👺",
+          "🤡",
+          "💩",
+          "👻",
+          "💀",
+          "☠️",
+          "👽",
+          "👾",
+          "🤖",
+          "🎃",
+          "👍",
+          "👎",
+          "👌",
+          "✌️",
+          "🤞",
+          "🤟",
+          "🤘",
+          "🤙",
+          "👈",
+          "👉",
+          "👆",
+          "👇",
+          "☝️",
+          "✋",
+          "🤚",
+          "🖐️",
+          "🖖",
+          "👋",
+          "💪",
+          "🦾",
+          "🖕",
+          "✍️",
+          "🙏",
+          "💄",
+          "💋",
+          "👄",
+          "🦷",
+          "👅",
+          "👂",
+          "🦻",
+          "👃",
+          "👣",
+          "👁️",
+          "👀",
+          "❤️",
+          "🧡",
+          "💛",
+          "💚",
+          "💙",
+          "💜",
+        ];
+
+        // ---------- STORAGE ----------
+        function saveAll() {
+          localStorage.setItem("chatrix_users", JSON.stringify(users));
+          localStorage.setItem("chatrix_messages", JSON.stringify(messages));
+          localStorage.setItem("chatrix_chapters", JSON.stringify(chapters));
+          localStorage.setItem("chatrix_hubs", JSON.stringify(hubs));
+          localStorage.setItem(
+            "chatrix_profiles",
+            JSON.stringify(userProfiles),
+          );
+          localStorage.setItem("chatrix_groups", JSON.stringify(groups));
+          localStorage.setItem(
+            "chatrix_groupChats",
+            JSON.stringify(groupChats),
+          );
+          localStorage.setItem(
+            "chatrix_friendRequests",
+            JSON.stringify(friendRequests),
+          );
+          localStorage.setItem("chatrix_userTiers", JSON.stringify(userTiers));
+        }
+
+        function loadAll() {
+          let saved = localStorage.getItem("chatrix_users");
+          if (saved) {
+            users = JSON.parse(saved);
+          } else {
+            users = {
+              alex: {
+                pass: btoa("alex123"),
+                friends: ["jasmine"],
+                displayName: "Alex",
+              },
+              jasmine: {
+                pass: btoa("jasmine123"),
+                friends: ["alex"],
+                displayName: "Jasmine",
+              },
+            };
+            saveAll();
+          }
+          messages = JSON.parse(
+            localStorage.getItem("chatrix_messages") || "{}",
+          );
+          chapters = JSON.parse(
+            localStorage.getItem("chatrix_chapters") || "[]",
+          );
+          hubs = JSON.parse(localStorage.getItem("chatrix_hubs") || "[]");
+          userProfiles = JSON.parse(
+            localStorage.getItem("chatrix_profiles") || "{}",
+          );
+          groups = JSON.parse(localStorage.getItem("chatrix_groups") || "[]");
+          groupChats = JSON.parse(
+            localStorage.getItem("chatrix_groupChats") || "{}",
+          );
+          friendRequests = JSON.parse(
+            localStorage.getItem("chatrix_friendRequests") || "{}",
+          );
+          userTiers = JSON.parse(
+            localStorage.getItem("chatrix_userTiers") || "{}",
+          );
+
+          Object.keys(users).forEach((u) => {
+            if (!users[u].displayName) users[u].displayName = u;
+            if (!users[u].friends) users[u].friends = [];
+            if (!userTiers[u]) userTiers[u] = { tier: 0, lastPostDate: null };
+          });
+        }
+
+        // ---------- HELPERS ----------
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str).replace(/[&<>]/g, (m) =>
+            m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;",
+          );
+        }
+
+        function getFriends(u) {
+          return users[u]?.friends || [];
+        }
+        function getTierName(tier) {
+          if (tier >= 50) return "🏆 LEGEND";
+          if (tier >= 30) return "💎 MASTER";
+          if (tier >= 20) return "🥇 ELITE";
+          if (tier >= 10) return "🥈 ADVANCED";
+          if (tier >= 5) return "🥉 NOVICE";
+          if (tier >= 1) return "🌱 BEGINNER";
+          return "📘 ROOKIE";
+        }
+
+        // ---------- UI REFRESH (REAL TIME) ----------
+        function refreshUI() {
+          if (!currentUser) return;
+          // Reload all data from localStorage to catch changes from other windows/tabs
+          loadAll();
+          renderFriends();
+          renderPendingRequests();
+          renderGroups();
+          renderHubs();
+          renderChapters();
+          renderLeaderboard();
+          renderWinners();
+          if (currentChatId && currentChatType === "friend")
+            renderMessages(currentChatId);
+          else if (currentChatId && currentChatType === "group")
+            renderGroupMessages(currentChatId);
+          else if (currentChatId && currentChatType === "hub")
+            renderHubMessages(currentChatId);
+          updateBadges();
+        }
+
+        function updateBadges() {
+          let unread = 0;
+          if (messages[currentUser]) {
+            for (let f in messages[currentUser]) {
+              unread += messages[currentUser][f].filter(
+                (m) => m.from === f && !m.read,
+              ).length;
+            }
+          }
+          let badge = document.getElementById("chatsTabBadge");
+          if (badge) {
+            badge.innerHTML = unread;
+            badge.classList.toggle("hidden", unread === 0);
+          }
+          let chaptersNew = chapters.filter(
+            (c) =>
+              getFriends(currentUser).includes(c.user) &&
+              !c.viewedBy?.includes(currentUser),
+          ).length;
+          let chapBadge = document.getElementById("chaptersTabBadge");
+          if (chapBadge) {
+            chapBadge.innerHTML = chaptersNew;
+            chapBadge.classList.toggle("hidden", chaptersNew === 0);
+          }
+        }
+
+        // ---------- SCREENS ----------
+        window.showScreen = function (screen) {
+          document
+            .querySelectorAll(".screen")
+            .forEach((s) => s.classList.remove("active"));
+          let target = document.getElementById(screen + "Screen");
+          if (target) target.classList.add("active");
+          document.querySelectorAll(".tab").forEach((tab) => {
+            tab.classList.remove("active");
+            if (tab.getAttribute("data-tab") === screen)
+              tab.classList.add("active");
+          });
+          refreshUI();
+        };
+
+        // ---------- FRIENDS & CHAT (WITH MEDIA & VOICE) ----------
+        function renderMediaMessage(msg) {
+          if (msg.type === "image") {
+            return `<div><img src="${msg.data}" class="media-preview" onclick="window.showImagePreview('${msg.data}')"></div>`;
+          } else if (msg.type === "video") {
+            return `<div><video controls class="media-preview"><source src="${msg.data}"></video></div>`;
+          } else if (msg.type === "file") {
+            return `<div class="file-message"><i class="fas fa-file"></i> <a href="${msg.data}" target="_blank" style="color:#00d4ff;">${msg.fileName || "Download"}</a></div>`;
+          } else if (msg.type === "voice") {
+            return `<div class="voice-message"><i class="fas fa-microphone"></i> <audio controls src="${msg.data}" style="max-width:200px;"></audio></div>`;
+          }
+          return escapeHtml(msg.text);
+        }
+
+        function renderFriends() {
+          let friends = getFriends(currentUser);
+          let container = document.getElementById("friendsList");
+          if (!container) return;
+          if (!friends.length) {
+            container.innerHTML =
+              '<div class="empty">No friends yet. Add some!</div>';
+            return;
+          }
+          container.innerHTML = friends
+            .map((f) => {
+              let unread =
+                messages[currentUser]?.[f]?.filter(
+                  (m) => m.from === f && !m.read,
+                ).length || 0;
+              let lastMsg = messages[currentUser]?.[f]?.slice(-1)[0];
+              let preview = lastMsg
+                ? lastMsg.text ||
+                  (lastMsg.type === "image"
+                    ? "📷 Image"
+                    : lastMsg.type === "video"
+                      ? "🎥 Video"
+                      : lastMsg.type === "voice"
+                        ? "🎤 Voice"
+                        : "📎 File")
+                : "Say hello";
+              return `<div class="friend-item" onclick="window.openChat('${f}','friend')">
+        <div class="friend-avatar">👤</div>
+        <div style="flex:1"><div class="friend-name">${users[f]?.displayName || f}</div><div class="friend-preview">${escapeHtml(preview.substring(0, 50))}</div></div>
+        ${unread > 0 ? `<div class="notification-badge">${unread}</div>` : ""}
+      </div>`;
+            })
+            .join("");
+        }
+
+        function renderMessages(friend) {
+          let msgs = messages[currentUser]?.[friend] || [];
+          let container = document.getElementById("chatMessages");
+          if (!container) return;
+          msgs.forEach((m) => {
+            if (m.from === friend && !m.read) m.read = true;
+          });
+          saveAll();
+          if (!msgs.length) {
+            container.innerHTML = '<div class="empty">No messages yet</div>';
+            return;
+          }
+          container.innerHTML = msgs
+            .map(
+              (m) =>
+                `<div class="message-bubble ${m.from === currentUser ? "message-sent" : "message-received"}">${renderMediaMessage(m)}<div class="message-time">${m.time}</div></div>`,
+            )
+            .join("");
+          setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+          }, 50);
+          updateBadges();
+        }
+
+        function sendMediaMessage(to, type, data, fileName = null) {
+          let msg = {
+            id: Date.now(),
+            type,
+            data,
+            fileName,
+            from: currentUser,
+            time: new Date().toLocaleTimeString(),
+            read: false,
+          };
+          if (!messages[currentUser]) messages[currentUser] = {};
+          if (!messages[currentUser][to]) messages[currentUser][to] = [];
+          messages[currentUser][to].push(msg);
+          if (!messages[to]) messages[to] = {};
+          if (!messages[to][currentUser]) messages[to][currentUser] = [];
+          messages[to][currentUser].push({ ...msg, read: false });
+          saveAll();
+          if (currentChatId === to && currentChatType === "friend")
+            renderMessages(to);
+          renderFriends();
+        }
+
+        function sendTextMessage(to, text) {
+          if (!text.trim()) return;
+          let msg = {
+            id: Date.now(),
+            text: text.trim(),
+            from: currentUser,
+            time: new Date().toLocaleTimeString(),
+            read: false,
+          };
+          if (!messages[currentUser]) messages[currentUser] = {};
+          if (!messages[currentUser][to]) messages[currentUser][to] = [];
+          messages[currentUser][to].push(msg);
+          if (!messages[to]) messages[to] = {};
+          if (!messages[to][currentUser]) messages[to][currentUser] = [];
+          messages[to][currentUser].push({ ...msg, read: false });
+          saveAll();
+          if (currentChatId === to && currentChatType === "friend")
+            renderMessages(to);
+          renderFriends();
+        }
+
+        function sendMessage() {
+          let input = document.getElementById("messageInput");
+          if (!input || !input.value.trim() || !currentChatId) return;
+          if (currentChatType === "friend")
+            sendTextMessage(currentChatId, input.value);
+          else if (currentChatType === "group")
+            sendGroupMessage(currentChatId, input.value);
+          else if (currentChatType === "hub")
+            sendHubMessage(currentChatId, input.value);
+          input.value = "";
+          refreshUI(); // immediate update
+        }
+
+        window.openChat = function (id, type) {
+          currentChatId = id;
+          currentChatType = type;
+          if (type === "friend") {
+            document.getElementById("chatHeaderName").innerHTML =
+              users[id]?.displayName || id;
+            document.getElementById("chatHeaderAvatar").innerHTML = "👤";
+            renderMessages(id);
+          } else if (type === "group") {
+            let g = groups.find((g) => g.id == id);
+            document.getElementById("chatHeaderName").innerHTML = g.name;
+            document.getElementById("chatHeaderAvatar").innerHTML = g.picData
+              ? `<div style="background-image:url(${g.picData}); background-size:cover; width:100%; height:100%;"></div>`
+              : "👥";
+            renderGroupMessages(id);
+          } else if (type === "hub") {
+            let h = hubs.find((h) => h.id == id);
+            document.getElementById("chatHeaderName").innerHTML = h.name;
+            document.getElementById("chatHeaderAvatar").innerHTML = h.picData
+              ? `<div style="background-image:url(${h.picData}); background-size:cover; width:100%; height:100%;"></div>`
+              : "📡";
+            renderHubMessages(id);
+          }
+          document.getElementById("chatView").classList.add("open");
+        };
+
+        function closeChat() {
+          currentChatId = null;
+          document.getElementById("chatView").classList.remove("open");
+        }
+
+        // ---------- FRIEND REQUESTS ----------
+        function renderPendingRequests() {
+          let requests =
+            friendRequests[currentUser]?.filter(
+              (r) => r.status === "pending",
+            ) || [];
+          let container = document.getElementById("pendingRequestsSection");
+          if (!container) return;
+          if (!requests.length) {
+            container.innerHTML = "";
+            return;
+          }
+          container.innerHTML =
+            `<div class="section-title">📨 Pending (${requests.length})</div>` +
+            requests
+              .map(
+                (r) =>
+                  `<div class="request-item"><div class="request-avatar">👤</div><div style="flex:1"><div class="friend-name">${users[r.from]?.displayName || r.from}</div></div><button class="small-btn" onclick="window.acceptReq('${r.from}')">Accept</button><button class="small-btn" onclick="window.denyReq('${r.from}')">Deny</button></div>`,
+              )
+              .join("");
+        }
+
+        function sendFriendRequest() {
+          let targetRaw = document
+            .getElementById("friendUsername")
+            .value.trim();
+          if (!targetRaw) {
+            alert("Please enter a username");
+            return;
+          }
+          let target = targetRaw.toLowerCase();
+          if (target === currentUser) {
+            alert("You cannot add yourself");
+            return;
+          }
+          if (!users[target]) {
+            alert(
+              `User "${targetRaw}" not found. Make sure the username exists.`,
+            );
+            return;
+          }
+          if (users[currentUser].friends.includes(target)) {
+            alert("Already friends!");
+            closeModal("addFriendModal");
+            return;
+          }
+          if (!friendRequests[target]) friendRequests[target] = [];
+          if (
+            friendRequests[target].some(
+              (r) => r.from === currentUser && r.status === "pending",
+            )
+          ) {
+            alert("Friend request already sent!");
+            return;
+          }
+          friendRequests[target].push({
+            from: currentUser,
+            status: "pending",
+            timestamp: Date.now(),
+          });
+          saveAll();
+          alert(`Friend request sent to ${users[target].displayName}!`);
+          closeModal("addFriendModal");
+          document.getElementById("friendUsername").value = "";
+          refreshUI();
+        }
+
+        window.acceptReq = function (fromUser) {
+          let idx = friendRequests[currentUser].findIndex(
+            (r) => r.from === fromUser,
+          );
+          if (idx !== -1) {
+            friendRequests[currentUser].splice(idx, 1);
+            if (!users[currentUser].friends.includes(fromUser))
+              users[currentUser].friends.push(fromUser);
+            if (!users[fromUser].friends.includes(currentUser))
+              users[fromUser].friends.push(currentUser);
+            saveAll();
+            refreshUI();
+            alert(`You are now friends with ${users[fromUser]?.displayName}`);
+          }
+        };
+
+        window.denyReq = function (fromUser) {
+          let idx = friendRequests[currentUser].findIndex(
+            (r) => r.from === fromUser,
+          );
+          if (idx !== -1) {
+            friendRequests[currentUser].splice(idx, 1);
+            saveAll();
+            refreshUI();
+            alert(`Denied request from ${users[fromUser]?.displayName}`);
+          }
+        };
+
+        // ---------- GROUPS (FULL FEATURED) ----------
+        function renderGroups() {
+          let myGroups = groups.filter((g) => g.members?.includes(currentUser));
+          let container = document.getElementById("groupsList");
+          if (!container) return;
+          if (!myGroups.length) {
+            container.innerHTML =
+              '<div class="empty">No groups yet. Create one!</div>';
+            return;
+          }
+          container.innerHTML = myGroups
+            .map((g) => {
+              let lastMsg = groupChats[g.id]?.slice(-1)[0];
+              let preview = lastMsg ? lastMsg.text || "Media" : "No messages";
+              let unread =
+                groupChats[g.id]?.filter(
+                  (m) => m.from !== currentUser && !m.read,
+                ).length || 0;
+              let avatarStyle = g.picData
+                ? `style="background-image: url(${g.picData}); background-size: cover;"`
+                : "";
+              return `<div class="group-item" onclick="window.openChat(${g.id},'group')">
+        <div class="group-avatar" ${avatarStyle}>${!g.picData ? "👥" : ""}</div>
+        <div style="flex:1"><div class="friend-name">${escapeHtml(g.name)}</div><div class="friend-preview">${escapeHtml(preview.substring(0, 50))}</div></div>
+        ${unread > 0 ? `<div class="notification-badge">${unread}</div>` : ""}
+      </div>`;
+            })
+            .join("");
+        }
+
+        function renderGroupMessages(id) {
+          let msgs = groupChats[id] || [];
+          let container = document.getElementById("chatMessages");
+          if (!container) return;
+          msgs.forEach((m) => {
+            if (m.from !== currentUser && !m.read) m.read = true;
+          });
+          saveAll();
+          if (!msgs.length) {
+            container.innerHTML = '<div class="empty">No messages yet</div>';
+            return;
+          }
+          container.innerHTML = msgs
+            .map(
+              (m) =>
+                `<div class="message-bubble ${m.from === currentUser ? "message-sent" : "message-received"}">${renderMediaMessage(m)}<div class="message-time">${m.time}</div></div>`,
+            )
+            .join("");
+          setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+          }, 50);
+          updateBadges();
+        }
+
+        function sendGroupMessage(id, text) {
+          if (!text.trim()) return;
+          let msg = {
+            id: Date.now(),
+            text: text.trim(),
+            from: currentUser,
+            time: new Date().toLocaleTimeString(),
+            read: false,
+          };
+          if (!groupChats[id]) groupChats[id] = [];
+          groupChats[id].push(msg);
+          saveAll();
+          if (currentChatId == id && currentChatType === "group")
+            renderGroupMessages(id);
+          renderGroups();
+        }
+
+        function showCreateGroupModal() {
+          let friends = getFriends(currentUser);
+          let membersHtml = friends
+            .map(
+              (f) =>
+                `<label class="member-checkbox"><input type="checkbox" value="${f}" class="member-check"> ${users[f]?.displayName || f}</label>`,
+            )
+            .join("");
+          document.getElementById("groupMembersSelect").innerHTML = membersHtml;
+          document.getElementById("groupAdminsSelect").innerHTML =
+            `<label class="member-checkbox"><input type="checkbox" id="adminSelf" checked disabled> ${users[currentUser]?.displayName || currentUser} (Creator - Always Admin)</label>`;
+          document
+            .getElementById("createGroupModal")
+            .classList.remove("hidden");
+          document.getElementById("groupPicPreview").style.backgroundImage = "";
+          document.getElementById("groupPicPreview").innerHTML = "👥";
+          document.getElementById("groupPicFile").value = "";
+        }
+
+        function createGroup() {
+          let name = document.getElementById("groupName").value.trim();
+          if (!name) {
+            alert("Group name required");
+            return;
+          }
+          let desc = document.getElementById("groupDesc").value.trim();
+          let selectedMembers = [
+            ...document.querySelectorAll("#groupMembersSelect input:checked"),
+          ].map((cb) => cb.value);
+          let admins = [currentUser];
+          let picData = null;
+          let previewDiv = document.getElementById("groupPicPreview");
+          if (
+            previewDiv.style.backgroundImage &&
+            previewDiv.style.backgroundImage !== "none"
+          ) {
+            picData = previewDiv.style.backgroundImage.slice(5, -2);
+          }
+          let group = {
+            id: Date.now(),
+            name,
+            desc,
+            creator: currentUser,
+            admins,
+            members: [currentUser, ...selectedMembers],
+            picData,
+          };
+          groups.push(group);
+          groupChats[group.id] = [];
+          saveAll();
+          renderGroups();
+          closeModal("createGroupModal");
+          document.getElementById("groupName").value = "";
+          document.getElementById("groupDesc").value = "";
+          refreshUI();
+        }
+
+        // ---------- HUBS (FULL FEATURED) ----------
+        function renderHubs() {
+          let myHubs = hubs.filter((h) => h.members?.includes(currentUser));
+          let container = document.getElementById("hubsList");
+          if (!container) return;
+          if (!myHubs.length) {
+            container.innerHTML = '<div class="empty">No hubs</div>';
+            return;
+          }
+          container.innerHTML = myHubs
+            .map((h) => {
+              let unread =
+                h.messages?.filter((m) => m.from !== currentUser && !m.read)
+                  .length || 0;
+              let avatarStyle = h.picData
+                ? `style="background-image: url(${h.picData}); background-size: cover;"`
+                : "";
+              return `<div class="hub-item" onclick="window.openChat(${h.id},'hub')">
+        <div class="hub-avatar" ${avatarStyle}>${!h.picData ? "📡" : ""}</div>
+        <div style="flex:1"><div class="friend-name">${escapeHtml(h.name)}</div><div class="friend-preview">${h.members.length} members</div></div>
+        ${unread > 0 ? `<div class="notification-badge">${unread}</div>` : ""}
+      </div>`;
+            })
+            .join("");
+        }
+
+        function renderHubMessages(id) {
+          let hub = hubs.find((h) => h.id == id);
+          let msgs = hub.messages || [];
+          let container = document.getElementById("chatMessages");
+          if (!container) return;
+          msgs.forEach((m) => {
+            if (m.from !== currentUser && !m.read) m.read = true;
+          });
+          saveAll();
+          if (!msgs.length) {
+            container.innerHTML = '<div class="empty">No messages yet</div>';
+            return;
+          }
+          container.innerHTML = msgs
+            .map(
+              (m) =>
+                `<div class="message-bubble ${m.from === currentUser ? "message-sent" : "message-received"}">${renderMediaMessage(m)}<div class="message-time">${m.time}</div></div>`,
+            )
+            .join("");
+          setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+          }, 50);
+          updateBadges();
+        }
+
+        function sendHubMessage(id, text) {
+          if (!text.trim()) return;
+          let hub = hubs.find((h) => h.id == id);
+          if (!hub || !hub.members.includes(currentUser)) return;
+          if (!hub.messages) hub.messages = [];
+          let msg = {
+            id: Date.now(),
+            text: text.trim(),
+            from: currentUser,
+            time: new Date().toLocaleTimeString(),
+            read: false,
+          };
+          hub.messages.push(msg);
+          saveAll();
+          if (currentChatId == id && currentChatType === "hub")
+            renderHubMessages(id);
+          renderHubs();
+        }
+
+        function showCreateHubModal() {
+          document.getElementById("createHubModal").classList.remove("hidden");
+          document.getElementById("hubPicPreview").innerHTML = "📡";
+          document.getElementById("hubPicPreview").style.backgroundImage = "";
+          document.getElementById("hubPicFile").value = "";
+        }
+
+        function createHub() {
+          let name = document.getElementById("hubName").value.trim();
+          if (!name) {
+            alert("Hub name required");
+            return;
+          }
+          let desc = document.getElementById("hubDesc").value.trim();
+          let password = document.getElementById("hubPass").value;
+          let picData = null;
+          let previewDiv = document.getElementById("hubPicPreview");
+          if (
+            previewDiv.style.backgroundImage &&
+            previewDiv.style.backgroundImage !== "none"
+          ) {
+            picData = previewDiv.style.backgroundImage.slice(5, -2);
+          }
+          let hub = {
+            id: Date.now(),
+            creator: currentUser,
+            name,
+            desc,
+            password,
+            members: [currentUser],
+            messages: [],
+            picData,
+          };
+          hubs.push(hub);
+          saveAll();
+          renderHubs();
+          closeModal("createHubModal");
+          document.getElementById("hubName").value = "";
+          document.getElementById("hubDesc").value = "";
+          document.getElementById("hubPass").value = "";
+          refreshUI();
+        }
+
+        // ---------- CHAPTERS ----------
+        function renderChapters() {
+          let friends = getFriends(currentUser);
+          let visible = chapters.filter(
+            (c) => friends.includes(c.user) || c.user === currentUser,
+          );
+          let container = document.getElementById("chaptersList");
+          if (!container) return;
+          if (!visible.length) {
+            container.innerHTML = '<div class="empty">No chapters</div>';
+            return;
+          }
+          container.innerHTML = visible
+            .map((c) => {
+              let isNew =
+                !c.viewedBy?.includes(currentUser) && c.user !== currentUser;
+              return `<div class="chapter-card" style="${isNew ? "border-left-color: #ff4466;" : ""}" onclick="window.viewChapter(${c.id})">
+        <div class="chapter-header"><div class="chapter-avatar">📖</div><div><div class="chapter-user">${users[c.user]?.displayName || c.user} <span class="tier-badge">${getTierName(userTiers[c.user]?.tier || 0)}</span></div><div class="chapter-time">${c.timeStr}</div></div></div>
+        <div class="chapter-text">${escapeHtml(c.text)}</div>
+        <div class="chapter-stats"><span>👁️ ${c.views || 0}</span><button class="like-btn ${c.likes?.includes(currentUser) ? "liked" : ""}" onclick="event.stopPropagation();window.likeChapter(${c.id})"><i class="fas fa-heart"></i> ${c.likes?.length || 0}</button></div>
+        ${c.user === currentUser ? `<button class="delete-chapter" onclick="event.stopPropagation();window.deleteChapter(${c.id})">Del</button>` : ""}
+      </div>`;
+            })
+            .join("");
+          updateBadges();
+        }
+
+        window.viewChapter = function (id) {
+          let c = chapters.find((c) => c.id === id);
+          if (c && !c.viewedBy?.includes(currentUser)) {
+            if (!c.viewedBy) c.viewedBy = [];
+            c.viewedBy.push(currentUser);
+            c.views = (c.views || 0) + 1;
+            saveAll();
+            renderChapters();
+          }
+          alert(
+            `📖 ${c.text}\n❤️ ${c.likes?.length || 0} likes\n👁️ ${c.views || 0} views`,
+          );
+          refreshUI();
+        };
+
+        window.likeChapter = function (id) {
+          let c = chapters.find((c) => c.id === id);
+          if (c) {
+            if (!c.likes) c.likes = [];
+            let idx = c.likes.indexOf(currentUser);
+            if (idx === -1) c.likes.push(currentUser);
+            else c.likes.splice(idx, 1);
+            saveAll();
+            renderChapters();
+          }
+          refreshUI();
+        };
+
+        window.deleteChapter = function (id) {
+          if (confirm("Delete this chapter?")) {
+            chapters = chapters.filter((c) => c.id !== id);
+            saveAll();
+            renderChapters();
+            refreshUI();
+          }
+        };
+
+        function postChapter() {
+          let text = document.getElementById("chapterText").value.trim();
+          if (text) {
+            let today = new Date().toDateString();
+            if (userTiers[currentUser].lastPostDate !== today) {
+              userTiers[currentUser].tier =
+                (userTiers[currentUser].tier || 0) + 1;
+              userTiers[currentUser].lastPostDate = today;
+            }
+            chapters.unshift({
+              id: Date.now(),
+              user: currentUser,
+              text,
+              timeStr: new Date().toLocaleString(),
+              likes: [],
+              views: 0,
+              viewedBy: [],
+            });
+            saveAll();
+            renderChapters();
+            renderLeaderboard();
+            closeModal("chapterModal");
+            document.getElementById("chapterText").value = "";
+            alert("Chapter posted! +1 Tier point");
+            refreshUI();
+          }
+        }
+
+        // ---------- LEADERBOARD (only existing users) ----------
+        function getLeaderboard() {
+          return Object.keys(userTiers)
+            .filter((u) => users[u])
+            .map((u) => ({
+              displayName: users[u]?.displayName || u,
+              tier: userTiers[u]?.tier || 0,
+            }))
+            .sort((a, b) => b.tier - a.tier);
+        }
+
+        function renderLeaderboard() {
+          let board = getLeaderboard();
+          let container = document.getElementById("leaderboardList");
+          if (!container) return;
+          if (!board.length) {
+            container.innerHTML = '<div class="empty">No data</div>';
+            return;
+          }
+          container.innerHTML =
+            `<div class="leaderboard-header"><span>Rank</span><span>User</span><span>Tier</span></div>` +
+            board
+              .map(
+                (u, idx) =>
+                  `<div class="leaderboard-item"><div class="leaderboard-rank">#${idx + 1}</div><div>🏆</div><div style="flex:1"><div class="friend-name">${u.displayName}</div></div><div><span class="tier-badge">${getTierName(u.tier)} (${u.tier})</span></div></div>`,
+              )
+              .join("");
+        }
+
+        function renderWinners() {
+          let w = document.getElementById("weeklyWinnerBox");
+          let m = document.getElementById("monthlyWinnerBox");
+          if (w)
+            w.innerHTML = `<div class="winner-trophy">🏆</div><div><div class="friend-name">Weekly Leader</div><div class="friend-preview">Coming soon</div></div>`;
+          if (m)
+            m.innerHTML = `<div class="winner-trophy">👑</div><div><div class="friend-name">Monthly Leader</div><div class="friend-preview">Coming soon</div></div>`;
+        }
+
+        // ---------- PROFILE & DELETE ACCOUNT ----------
+        function updateAvatar() {
+          let avatar = document.getElementById("currentUserAvatar");
+          if (!avatar || !currentUser) return;
+          let profile = userProfiles[currentUser];
+          if (profile?.picData) {
+            avatar.style.backgroundImage = `url(${profile.picData})`;
+            avatar.style.backgroundSize = "cover";
+            avatar.innerHTML = "";
+          } else {
+            avatar.style.backgroundImage = "";
+            avatar.innerHTML = "👤";
+          }
+        }
+
+        function saveProfile() {
+          if (!currentUser) return;
+          let newName = document.getElementById("editDisplayName").value.trim();
+          if (newName) users[currentUser].displayName = newName;
+
+          let newPass = document.getElementById("editPassword").value;
+          let confirmPass = document.getElementById(
+            "editConfirmPassword",
+          ).value;
+          if (newPass) {
+            if (newPass !== confirmPass) {
+              alert("Passwords do not match");
+              return;
+            }
+            users[currentUser].pass = btoa(newPass);
+            alert("Password updated! Use your new password next login.");
+          }
+
+          let file = document.getElementById("profilePicInput").files[0];
+          if (file) {
+            let reader = new FileReader();
+            reader.onload = function (e) {
+              if (!userProfiles[currentUser]) userProfiles[currentUser] = {};
+              userProfiles[currentUser].picData = e.target.result;
+              saveAll();
+              updateAvatar();
+              refreshUI();
+            };
+            reader.readAsDataURL(file);
+          } else {
+            saveAll();
+            updateAvatar();
+            refreshUI();
+          }
+          closeModal("editProfileModal");
+          alert("Profile updated!");
+        }
+
+        function deleteAccount() {
+          if (!currentUser) return;
+          if (
+            confirm(
+              "⚠️ Delete your account permanently?\nAll data will be lost!",
+            )
+          ) {
+            Object.keys(users).forEach((u) => {
+              if (users[u] && users[u].friends) {
+                users[u].friends = users[u].friends.filter(
+                  (f) => f !== currentUser,
+                );
+              }
+            });
+            delete friendRequests[currentUser];
+            Object.keys(friendRequests).forEach((u) => {
+              if (friendRequests[u]) {
+                friendRequests[u] = friendRequests[u].filter(
+                  (r) => r.from !== currentUser,
+                );
+              }
+            });
+            groups.forEach((g) => {
+              if (g.members)
+                g.members = g.members.filter((m) => m !== currentUser);
+            });
+            hubs.forEach((h) => {
+              if (h.members)
+                h.members = h.members.filter((m) => m !== currentUser);
+            });
+            delete users[currentUser];
+            delete userTiers[currentUser];
+            delete userProfiles[currentUser];
+            saveAll();
+            logout();
+          }
+        }
+
+        // ---------- MEDIA ATTACHMENTS ----------
+        function setupAttachments() {
+          const attachMenu = document.getElementById("attachMenu");
+          const attachBtn = document.getElementById("attachBtn");
+          attachBtn.onclick = (e) => {
+            e.stopPropagation();
+            attachMenu.classList.toggle("show");
+          };
+          document.addEventListener("click", (e) => {
+            if (!attachBtn.contains(e.target) && !attachMenu.contains(e.target))
+              attachMenu.classList.remove("show");
+          });
+
+          function handleFileUpload(accept, type) {
+            let input = document.createElement("input");
+            input.type = "file";
+            input.accept = accept;
+            input.onchange = (e) => {
+              let file = e.target.files[0];
+              if (file && currentChatId) {
+                let reader = new FileReader();
+                reader.onload = (ev) => {
+                  if (currentChatType === "friend")
+                    sendMediaMessage(
+                      currentChatId,
+                      type,
+                      ev.target.result,
+                      file.name,
+                    );
+                  else if (currentChatType === "group")
+                    sendGroupMediaMessage(
+                      currentChatId,
+                      type,
+                      ev.target.result,
+                      file.name,
+                    );
+                  else if (currentChatType === "hub")
+                    sendHubMediaMessage(
+                      currentChatId,
+                      type,
+                      ev.target.result,
+                      file.name,
+                    );
+                  refreshUI();
+                };
+                reader.readAsDataURL(file);
+              }
+              attachMenu.classList.remove("show");
+            };
+            input.click();
+          }
+
+          document.getElementById("attachImage").onclick = () =>
+            handleFileUpload("image/*", "image");
+          document.getElementById("attachVideo").onclick = () =>
+            handleFileUpload("video/*", "video");
+          document.getElementById("attachFile").onclick = () =>
+            handleFileUpload("*/*", "file");
+        }
+
+        function sendGroupMediaMessage(id, type, data, fileName) {
+          let msg = {
+            id: Date.now(),
+            type,
+            data,
+            fileName,
+            from: currentUser,
+            time: new Date().toLocaleTimeString(),
+            read: false,
+          };
+          if (!groupChats[id]) groupChats[id] = [];
+          groupChats[id].push(msg);
+          saveAll();
+          if (currentChatId == id && currentChatType === "group")
+            renderGroupMessages(id);
+          renderGroups();
+        }
+
+        function sendHubMediaMessage(id, type, data, fileName) {
+          let hub = hubs.find((h) => h.id == id);
+          if (!hub || !hub.members.includes(currentUser)) return;
+          if (!hub.messages) hub.messages = [];
+          let msg = {
+            id: Date.now(),
+            type,
+            data,
+            fileName,
+            from: currentUser,
+            time: new Date().toLocaleTimeString(),
+            read: false,
+          };
+          hub.messages.push(msg);
+          saveAll();
+          if (currentChatId == id && currentChatType === "hub")
+            renderHubMessages(id);
+          renderHubs();
+        }
+
+        // ---------- VOICE RECORDING ----------
+        const voiceBtn = document.getElementById("voiceRecordBtn");
+
+        async function startRecording() {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
+            mediaRecorderObj = new MediaRecorder(stream);
+            audioChunksArray = [];
+            mediaRecorderObj.ondataavailable = (event) => {
+              audioChunksArray.push(event.data);
+            };
+            mediaRecorderObj.onstop = () => {
+              const audioBlob = new Blob(audioChunksArray, {
+                type: "audio/webm",
+              });
+              const reader = new FileReader();
+              reader.onload = function () {
+                const audioDataUrl = reader.result;
+                if (currentChatId) {
+                  if (currentChatType === "friend")
+                    sendMediaMessage(
+                      currentChatId,
+                      "voice",
+                      audioDataUrl,
+                      "voice.webm",
+                    );
+                  else if (currentChatType === "group")
+                    sendGroupMediaMessage(
+                      currentChatId,
+                      "voice",
+                      audioDataUrl,
+                      "voice.webm",
+                    );
+                  else if (currentChatType === "hub")
+                    sendHubMediaMessage(
+                      currentChatId,
+                      "voice",
+                      audioDataUrl,
+                      "voice.webm",
+                    );
+                  refreshUI();
+                }
+              };
+              reader.readAsDataURL(audioBlob);
+              stream.getTracks().forEach((track) => track.stop());
+              voiceBtn.classList.remove("recording-active");
+              voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+              isRecordingActive = false;
+            };
+            mediaRecorderObj.start();
+            isRecordingActive = true;
+            voiceBtn.classList.add("recording-active");
+            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+          } catch (err) {
+            alert("Microphone access denied or not available");
+          }
+        }
+
+        function stopRecording() {
+          if (mediaRecorderObj && isRecordingActive) {
+            mediaRecorderObj.stop();
+          }
+        }
+
+        voiceBtn.onclick = () => {
+          if (!currentChatId) {
+            alert("Open a chat first");
+            return;
+          }
+          if (isRecordingActive) {
+            stopRecording();
+          } else {
+            startRecording();
+          }
+        };
+
+        // ---------- EMOJI PICKER ----------
+        function buildEmojiPicker() {
+          let picker = document.getElementById("emojiPicker");
+          if (!picker) return;
+          picker.innerHTML = emojis
+            .map((e) => `<button class="emoji-option">${e}</button>`)
+            .join("");
+          picker.querySelectorAll(".emoji-option").forEach((btn) => {
+            btn.onclick = () => {
+              let input = document.getElementById("messageInput");
+              if (input) input.value += btn.innerText;
+              picker.classList.remove("show");
+            };
+          });
+          document.getElementById("emojiBtn").onclick = (e) => {
+            e.stopPropagation();
+            picker.classList.toggle("show");
+          };
+          document.addEventListener("click", (e) => {
+            if (
+              !document.getElementById("emojiBtn").contains(e.target) &&
+              !picker.contains(e.target)
+            )
+              picker.classList.remove("show");
+          });
+        }
+
+        // ---------- TAG SYSTEM ----------
+        function showTagPopup() {
+          let friends = getFriends(currentUser);
+          if (!friends.length) {
+            alert("No friends to tag");
+            return;
+          }
+          let popup = document.getElementById("tagSearchPopup");
+          let list = document.getElementById("tagFriendsList");
+          let search = document.getElementById("tagSearchInput");
+          if (!popup) return;
+          function render(searchTerm = "") {
+            let filtered = friends.filter((f) =>
+              users[f]?.displayName
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase()),
+            );
+            if (!filtered.length) {
+              list.innerHTML =
+                '<div style="padding:12px;text-align:center;color:#888;">No friends</div>';
+              return;
+            }
+            list.innerHTML = filtered
+              .map(
+                (
+                  f,
+                ) => `<div class="tag-friend-item" data-name="${users[f]?.displayName || f}">
+        <div class="tag-friend-avatar">${users[f]?.displayName?.charAt(0) || "👤"}</div>
+        <div class="tag-friend-name">${users[f]?.displayName || f}</div>
+      </div>`,
+              )
+              .join("");
+            document.querySelectorAll(".tag-friend-item").forEach((item) => {
+              item.onclick = () => {
+                let name = item.getAttribute("data-name");
+                let input = document.getElementById("messageInput");
+                if (input) {
+                  input.value += `@${name} `;
+                  input.focus();
+                }
+                popup.classList.remove("show");
+              };
+            });
+          }
+          search.value = "";
+          search.oninput = (e) => render(e.target.value);
+          render("");
+          popup.classList.add("show");
+          search.focus();
+          setTimeout(() => {
+            document.addEventListener("click", function closePopup(e) {
+              if (!popup.contains(e.target) && e.target.id !== "tagBtn") {
+                popup.classList.remove("show");
+                document.removeEventListener("click", closePopup);
+              }
+            });
+          }, 100);
+        }
+
+        // ---------- THEME ----------
+        function toggleTheme() {
+          document.body.classList.toggle("light-theme");
+          localStorage.setItem(
+            "theme",
+            document.body.classList.contains("light-theme") ? "light" : "dark",
+          );
+        }
+
+        // ---------- LOGIN / LOGOUT ----------
+        function doLogin() {
+          let u = document
+            .getElementById("loginUser")
+            .value.trim()
+            .toLowerCase();
+          let p = document.getElementById("loginPass").value;
+          let user = users[u];
+          if (user && user.pass === btoa(p)) {
+            currentUser = u;
+            localStorage.setItem("currentUser", u);
+            document.getElementById("loginModal").classList.add("hidden");
+            refreshUI();
+            updateAvatar();
+            window.showScreen("chats");
+          } else {
+            alert("Invalid! Try alex / alex123");
+          }
+        }
+
+        function doSignup() {
+          let u = document
+            .getElementById("signupUser")
+            .value.trim()
+            .toLowerCase();
+          let p = document.getElementById("signupPass").value;
+          let c = document.getElementById("signupConfirm").value;
+          if (p !== c) {
+            alert("Passwords don't match");
+            return;
+          }
+          if (users[u]) {
+            alert("Username exists");
+            return;
+          }
+          users[u] = { pass: btoa(p), friends: [], displayName: u };
+          userTiers[u] = { tier: 0, lastPostDate: null };
+          saveAll();
+          alert("Account created! Please login.");
+          document.getElementById("signupModal").classList.add("hidden");
+          document.getElementById("loginModal").classList.remove("hidden");
+        }
+
+        function logout() {
+          localStorage.removeItem("currentUser");
+          currentUser = null;
+          closeChat();
+          document.getElementById("loginModal").classList.remove("hidden");
+        }
+
+        function closeModal(id) {
+          document.getElementById(id).classList.add("hidden");
+        }
+
+        window.showImagePreview = function (url) {
+          let modal = document.createElement("div");
+          modal.className = "image-preview-modal";
+          modal.style.position = "fixed";
+          modal.style.top = 0;
+          modal.style.left = 0;
+          modal.style.width = "100%";
+          modal.style.height = "100%";
+          modal.style.background = "rgba(0,0,0,0.95)";
+          modal.style.zIndex = 200;
+          modal.style.display = "flex";
+          modal.style.alignItems = "center";
+          modal.style.justifyContent = "center";
+          modal.onclick = () => modal.remove();
+          let img = document.createElement("img");
+          img.src = url;
+          img.style.maxWidth = "90%";
+          img.style.maxHeight = "90%";
+          img.style.borderRadius = "20px";
+          modal.appendChild(img);
+          document.body.appendChild(modal);
+        };
+
+        // ---------- INITIALISE & REAL-TIME LOOP ----------
+        function init() {
+          loadAll();
+          let saved = localStorage.getItem("currentUser");
+          if (saved && users[saved]) {
+            currentUser = saved;
+            refreshUI();
+            updateAvatar();
+            window.showScreen("chats");
+            document.getElementById("loginModal").classList.add("hidden");
+          } else {
+            document.getElementById("loginModal").classList.remove("hidden");
+          }
+
+          // Event listeners
+          document.getElementById("loginBtn").onclick = doLogin;
+          document.getElementById("signupBtn").onclick = doSignup;
+          document.getElementById("showSignupLink").onclick = () => {
+            document.getElementById("loginModal").classList.add("hidden");
+            document.getElementById("signupModal").classList.remove("hidden");
+          };
+          document.getElementById("showLoginLink").onclick = () => {
+            document.getElementById("signupModal").classList.add("hidden");
+            document.getElementById("loginModal").classList.remove("hidden");
+          };
+          document.getElementById("logoutBtn").onclick = logout;
+          document.getElementById("themeBtn").onclick = toggleTheme;
+          document.getElementById("editProfileBtn").onclick = () =>
+            document
+              .getElementById("editProfileModal")
+              .classList.remove("hidden");
+          document.getElementById("saveProfileBtn").onclick = saveProfile;
+          document.getElementById("deleteAccountBtn").onclick = deleteAccount;
+          document.getElementById("closeProfileModal").onclick = () =>
+            closeModal("editProfileModal");
+          document.getElementById("addFriendBtn").onclick = () =>
+            document
+              .getElementById("addFriendModal")
+              .classList.remove("hidden");
+          document.getElementById("sendRequestBtn").onclick = sendFriendRequest;
+          document.getElementById("closeAddFriendModal").onclick = () =>
+            closeModal("addFriendModal");
+          document.getElementById("createGroupBtn").onclick =
+            showCreateGroupModal;
+          document.getElementById("createGroupSubmitBtn").onclick = createGroup;
+          document.getElementById("closeGroupModal").onclick = () =>
+            closeModal("createGroupModal");
+          document.getElementById("createHubBtn").onclick = showCreateHubModal;
+          document.getElementById("createHubSubmitBtn").onclick = createHub;
+          document.getElementById("closeHubModal").onclick = () =>
+            closeModal("createHubModal");
+          document.getElementById("newChapterBtn").onclick = () =>
+            document.getElementById("chapterModal").classList.remove("hidden");
+          document.getElementById("postChapterBtn").onclick = postChapter;
+          document.getElementById("closeChapterModal").onclick = () =>
+            closeModal("chapterModal");
+          document.getElementById("closeChatBtn").onclick = closeChat;
+          document.getElementById("sendMsgBtn").onclick = sendMessage;
+          document.getElementById("messageInput").onkeypress = (e) => {
+            if (e.key === "Enter") sendMessage();
+          };
+          document.getElementById("tagBtn").onclick = (e) => {
+            e.stopPropagation();
+            showTagPopup();
+          };
+
+          // Group/Hub picture previews
+          document.getElementById("groupPicFile").onchange = function (e) {
+            if (e.target.files && e.target.files[0]) {
+              let reader = new FileReader();
+              reader.onload = function (ev) {
+                let preview = document.getElementById("groupPicPreview");
+                preview.innerHTML = "";
+                preview.style.backgroundImage = `url(${ev.target.result})`;
+                preview.style.backgroundSize = "cover";
+              };
+              reader.readAsDataURL(e.target.files[0]);
+            }
+          };
+          document.getElementById("hubPicFile").onchange = function (e) {
+            if (e.target.files && e.target.files[0]) {
+              let reader = new FileReader();
+              reader.onload = function (ev) {
+                let preview = document.getElementById("hubPicPreview");
+                preview.innerHTML = "";
+                preview.style.backgroundImage = `url(${ev.target.result})`;
+                preview.style.backgroundSize = "cover";
+              };
+              reader.readAsDataURL(e.target.files[0]);
+            }
+          };
+
+          buildEmojiPicker();
+          setupAttachments();
+
+          window.closeChat = closeChat;
+
+          // REAL-TIME UPDATES every 2 seconds
+          setInterval(() => {
+            if (currentUser) refreshUI();
+          }, 2000);
+        }
+
+        init();
+      })();
+    </script>
+  </body>
+</html>
