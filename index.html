@@ -13,7 +13,7 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300d4ff'%3E%3Cpath d='M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E"
     />
     <style>
-      /* ===== FULL STYLES (same as your original app) ===== */
+      /* ===== FULL STYLES (same as before) ===== */
       * {
         margin: 0;
         padding: 0;
@@ -481,6 +481,8 @@
         flex-direction: column;
         gap: 8px;
         min-width: 200px;
+        max-height: 250px;
+        overflow-y: auto;
       }
       .attach-menu.show {
         display: flex;
@@ -719,7 +721,6 @@
         }
       }
     </style>
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
@@ -785,13 +786,13 @@
           </div>
           <div class="header-right">
             <a
-              href="https://web2apk.online/build_app.php?weburl=https%3A%2F%2Fchatrix1.vercel.app%2F"
+              href="https://web2apk.online/build_app.php?weburl=https%3A%2F%2Fchatrix10.vercel.app%2F"
               class="download-btn"
               target="_blank"
               ><i class="fas fa-download"></i> Download App</a
             >
             <a
-              href="https://chatrix1call.vercel.app/"
+              href="https://chatrix10call.vercel.app/"
               class="video-call-btn"
               target="_blank"
               ><i class="fas fa-video"></i> Video Call</a
@@ -1026,16 +1027,10 @@
             <div class="mouth"></div>
           </div>
           <h2>Chatrix</h2>
-          <input
-            type="text"
-            id="loginUser"
-            placeholder="Username"
-            value="alex"
-          /><input
+          <input type="text" id="loginUser" placeholder="Username" /><input
             type="password"
             id="loginPass"
             placeholder="Password"
-            value="alex123"
           /><button id="loginBtn">Log In</button>
           <div class="link" id="showSignupLink">Sign up</div>
         </div>
@@ -1058,7 +1053,7 @@
     </div>
 
     <script>
-      // ==================== FIREBASE CONFIG (YOUR PROVIDED CONFIG) ====================
+      // ==================== FIREBASE CONFIG ====================
       const firebaseConfig = {
         apiKey: "AIzaSyAGftHy2cSWCz_h5nKQF-BChy885CYA9f4",
         authDomain: "chatrix-77180.firebaseapp.com",
@@ -1068,8 +1063,6 @@
         appId: "1:258648778331:web:294dd149ce2baf32e9c17e",
         measurementId: "G-Y1HXR2QPKN",
       };
-      // =============================================================================
-
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
       const storage = firebase.storage();
@@ -1081,6 +1074,14 @@
       let currentChatId = null;
       let currentChatType = "friend";
       let unsubscribeListeners = [];
+      let messagesCache = {};
+      let usersCache = {};
+
+      // Voice recording
+      let mediaRecorder = null;
+      let audioChunks = [];
+      let isRecording = false;
+      const voiceBtn = document.getElementById("voiceRecordBtn");
 
       // Helper functions
       function escapeHtml(str) {
@@ -1098,7 +1099,8 @@
         document
           .querySelectorAll(".screen")
           .forEach((s) => s.classList.remove("active"));
-        document.getElementById(screen + "Screen").classList.add("active");
+        const target = document.getElementById(screen + "Screen");
+        if (target) target.classList.add("active");
         document.querySelectorAll(".tab").forEach((tab) => {
           tab.classList.remove("active");
           if (tab.getAttribute("data-tab") === screen)
@@ -1157,7 +1159,16 @@
           alert("Passwords don't match");
           return;
         }
+        if (password.length < 6) {
+          alert("Password must be at least 6 characters");
+          return;
+        }
         try {
+          const userDoc = await db.collection("users").doc(username).get();
+          if (userDoc.exists) {
+            alert("Username already taken");
+            return;
+          }
           const email = username + "@chatrix.local";
           await auth.createUserWithEmailAndPassword(email, password);
           await db.collection("users").doc(username).set({
@@ -1166,16 +1177,27 @@
             friends: [],
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
-          await db.collection("tiers").doc(username).set({
-            tier: 0,
-            lastPostDate: null,
-            streak: 0,
-          });
+          await db
+            .collection("tiers")
+            .doc(username)
+            .set({
+              tier: 0,
+              lastPostDate: null,
+              streak: 0,
+              weeklyChapters: 0,
+              monthlyChapters: 0,
+              weekReset: getWeekStart(new Date()),
+              monthReset: new Date(
+                new Date().getFullYear(),
+                new Date().getMonth(),
+                1,
+              ).toDateString(),
+            });
           alert("Account created! Please log in.");
           document.getElementById("signupModal").classList.add("hidden");
           document.getElementById("loginModal").classList.remove("hidden");
         } catch (err) {
-          alert(err.message);
+          alert("Signup failed: " + err.message);
         }
       }
       async function loadCurrentUserData(username) {
@@ -1197,13 +1219,22 @@
         }
       }
       function logout() {
-        auth.signOut();
-        currentUser = null;
-        currentUserDoc = null;
-        currentChatId = null;
-        unsubscribeListeners.forEach((fn) => fn());
-        unsubscribeListeners = [];
-        document.getElementById("loginModal").classList.remove("hidden");
+        auth
+          .signOut()
+          .then(() => {
+            currentUser = null;
+            currentUserDoc = null;
+            currentChatId = null;
+            unsubscribeListeners.forEach((fn) => fn());
+            unsubscribeListeners = [];
+            document
+              .querySelectorAll(".screen")
+              .forEach((s) => s.classList.remove("active"));
+            const loginModal = document.getElementById("loginModal");
+            if (loginModal) loginModal.classList.remove("hidden");
+            messagesCache = {};
+          })
+          .catch((err) => console.error("Logout error:", err));
       }
       window.logout = logout;
 
@@ -1225,20 +1256,100 @@
           renderHubMessages(currentChatId);
         updateBadges();
       }
-      function updateBadges() {
-        let totalUnread = 0;
-        document.getElementById("chatsTabBadge").innerHTML = totalUnread;
+      async function updateBadges() {
+        let unread = 0;
+        if (messagesCache[currentUserDoc?.username]) {
+          for (let f in messagesCache[currentUserDoc.username]) {
+            unread += messagesCache[currentUserDoc.username][f].filter(
+              (m) => m.from === f && !m.read,
+            ).length;
+          }
+        }
+        document.getElementById("chatsTabBadge").innerHTML = unread;
         document
           .getElementById("chatsTabBadge")
-          .classList.toggle("hidden", totalUnread === 0);
+          .classList.toggle("hidden", unread === 0);
+        const friends = currentUserDoc?.friends || [];
+        const chaptersSnap = await db.collection("chapters").get();
+        let newChapters = 0;
+        chaptersSnap.forEach((doc) => {
+          const c = doc.data();
+          if (
+            friends.includes(c.user) &&
+            !c.viewedBy?.includes(currentUserDoc.username)
+          )
+            newChapters++;
+        });
+        document.getElementById("chaptersTabBadge").innerHTML = newChapters;
+        document
+          .getElementById("chaptersTabBadge")
+          .classList.toggle("hidden", newChapters === 0);
       }
 
-      // ==================== FRIENDS & CHAT (WITH PROFILE PICTURES) ====================
-      async function getUserProfilePic(uid) {
-        const doc = await db.collection("users").doc(uid).get();
-        return doc.exists ? doc.data().profilePic : null;
+      // ==================== RENDER MESSAGES WITH CLICKABLE MENTIONS ====================
+      function renderMessagesWithMentions(text) {
+        const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+        return text.replace(mentionRegex, (match, username) => {
+          return `<span class="mention" data-username="${escapeHtml(username)}">${escapeHtml(match)}</span>`;
+        });
       }
 
+      async function handleMentionClick(username) {
+        if (!currentUserDoc) return;
+        if (username === currentUserDoc.username) {
+          alert("You mentioned yourself");
+          return;
+        }
+        // Check if already friends
+        if (currentUserDoc.friends.includes(username)) {
+          // Open chat with that friend
+          openChat(username, "friend");
+        } else {
+          // Send friend request if not already sent
+          const existingReq = await db
+            .collection("friendRequests")
+            .where("from", "==", currentUserDoc.username)
+            .where("to", "==", username)
+            .where("status", "==", "pending")
+            .get();
+          if (!existingReq.empty) {
+            alert(`Friend request already sent to ${username}`);
+            return;
+          }
+          await db.collection("friendRequests").add({
+            from: currentUserDoc.username,
+            to: username,
+            status: "pending",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          alert(`Friend request sent to ${username}`);
+          refreshAllUI();
+        }
+      }
+
+      function attachMentionClickHandlers() {
+        document.querySelectorAll(".mention").forEach((el) => {
+          el.onclick = (e) => {
+            e.stopPropagation();
+            const username = el.getAttribute("data-username");
+            if (username) handleMentionClick(username);
+          };
+        });
+      }
+
+      function renderMediaContent(m) {
+        if (m.type === "image")
+          return `<img src="${m.data}" class="media-preview" onclick="window.showImagePreview('${m.data}')">`;
+        if (m.type === "video")
+          return `<video controls class="media-preview"><source src="${m.data}"></video>`;
+        if (m.type === "file")
+          return `<div class="file-message"><i class="fas fa-file"></i> <a href="${m.data}" target="_blank">${m.fileName || "Download"}</a></div>`;
+        if (m.type === "voice")
+          return `<div class="voice-message"><i class="fas fa-microphone"></i> <audio controls src="${m.data}"></audio></div>`;
+        return renderMessagesWithMentions(escapeHtml(m.text));
+      }
+
+      // ==================== FRIENDS & CHAT ====================
       async function renderFriends() {
         if (!currentUserDoc) return;
         const friendsList = currentUserDoc.friends || [];
@@ -1293,6 +1404,9 @@
           .onSnapshot((snapshot) => {
             const msgs = [];
             snapshot.forEach((doc) => msgs.push({ id: doc.id, ...doc.data() }));
+            if (!messagesCache[currentUserDoc.username])
+              messagesCache[currentUserDoc.username] = {};
+            messagesCache[currentUserDoc.username][friendId] = msgs;
             if (msgs.length === 0) {
               container.innerHTML = '<div class="empty">No messages yet</div>';
               return;
@@ -1300,13 +1414,16 @@
             container.innerHTML = msgs
               .map(
                 (m) =>
-                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${escapeHtml(m.text)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
+                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
               )
               .join("");
             container.scrollTop = container.scrollHeight;
+            attachMentionClickHandlers();
+            updateBadges();
           });
         unsubscribeListeners[0] = unsubscribe;
       }
+
       async function sendTextMessage(to, text) {
         if (!text.trim()) return;
         const chatId = [currentUserDoc.username, to].sort().join("_");
@@ -1320,11 +1437,31 @@
           renderMessages(to);
         renderFriends();
       }
+
+      async function sendMediaMessage(to, type, dataUrl, fileName) {
+        const chatId = [currentUserDoc.username, to].sort().join("_");
+        await db.collection("messages").doc(chatId).collection("chat").add({
+          from: currentUserDoc.username,
+          type: type,
+          data: dataUrl,
+          fileName: fileName,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          read: false,
+        });
+        if (currentChatId === to && currentChatType === "friend")
+          renderMessages(to);
+        renderFriends();
+      }
+
       function sendMessage() {
         const input = document.getElementById("messageInput");
         if (!input || !input.value.trim() || !currentChatId) return;
         if (currentChatType === "friend")
           sendTextMessage(currentChatId, input.value);
+        else if (currentChatType === "group")
+          sendGroupMessage(currentChatId, input.value);
+        else if (currentChatType === "hub")
+          sendHubMessage(currentChatId, input.value);
         input.value = "";
       }
       window.sendMessage = sendMessage;
@@ -1451,7 +1588,7 @@
         alert(`Denied request from ${fromUser}`);
       };
 
-      // ==================== GROUPS ====================
+      // ==================== GROUPS (full) ====================
       async function renderGroups() {
         const groupsSnap = await db
           .collection("groups")
@@ -1506,10 +1643,11 @@
             container.innerHTML = msgs
               .map(
                 (m) =>
-                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${escapeHtml(m.text)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
+                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
               )
               .join("");
             container.scrollTop = container.scrollHeight;
+            attachMentionClickHandlers();
           });
         unsubscribeListeners[1] = unsubscribe;
       }
@@ -1522,6 +1660,21 @@
           .add({
             from: currentUserDoc.username,
             text: text.trim(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        if (currentChatId === groupId && currentChatType === "group")
+          renderGroupMessages(groupId);
+      }
+      async function sendGroupMediaMessage(groupId, type, url, fileName) {
+        await db
+          .collection("groupMessages")
+          .doc(groupId)
+          .collection("chat")
+          .add({
+            from: currentUserDoc.username,
+            type: type,
+            data: url,
+            fileName: fileName,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           });
         if (currentChatId === groupId && currentChatType === "group")
@@ -1573,7 +1726,7 @@
         renderGroups();
       }
 
-      // ==================== HUBS ====================
+      // ==================== HUBS (full) ====================
       async function renderHubs() {
         const hubsSnap = await db
           .collection("hubs")
@@ -1617,10 +1770,11 @@
             container.innerHTML = msgs
               .map(
                 (m) =>
-                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${escapeHtml(m.text)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
+                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
               )
               .join("");
             container.scrollTop = container.scrollHeight;
+            attachMentionClickHandlers();
           });
         unsubscribeListeners[2] = unsubscribe;
       }
@@ -1629,6 +1783,17 @@
         await db.collection("hubMessages").doc(hubId).collection("chat").add({
           from: currentUserDoc.username,
           text: text.trim(),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        if (currentChatId === hubId && currentChatType === "hub")
+          renderHubMessages(hubId);
+      }
+      async function sendHubMediaMessage(hubId, type, url, fileName) {
+        await db.collection("hubMessages").doc(hubId).collection("chat").add({
+          from: currentUserDoc.username,
+          type: type,
+          data: url,
+          fileName: fileName,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         });
         if (currentChatId === hubId && currentChatType === "hub")
@@ -1690,20 +1855,35 @@
           const tierDoc = await db.collection("tiers").doc(c.user).get();
           const tier = tierDoc.exists ? tierDoc.data().tier : 0;
           const isLiked = c.likes && c.likes.includes(currentUserDoc.username);
-          html += `<div class="chapter-card" onclick="window.viewChapter('${doc.id}')">
+          const isNew =
+            !c.viewedBy?.includes(currentUserDoc.username) &&
+            c.user !== currentUserDoc.username;
+          html += `<div class="chapter-card" style="${isNew ? "border-left-color: #ff4466;" : ""}" onclick="window.viewChapter('${doc.id}')">
       <div class="chapter-header"><div class="chapter-avatar">📖</div><div><div class="chapter-user">${escapeHtml(displayName)} <span class="tier-badge">${getTierName(tier)}</span></div><div class="chapter-time">${formatTime(c.timestamp)}</div></div></div>
       <div class="chapter-text">${escapeHtml(c.text)}</div>
-      <div class="chapter-stats"><span>❤️ ${c.likes?.length || 0}</span><button class="like-btn ${isLiked ? "liked" : ""}" onclick="event.stopPropagation();window.likeChapter('${doc.id}')"><i class="fas fa-heart"></i></button></div>
+      <div class="chapter-stats"><span>👁️ ${c.views || 0}</span><span>❤️ ${c.likes?.length || 0}</span><button class="like-btn ${isLiked ? "liked" : ""}" onclick="event.stopPropagation();window.likeChapter('${doc.id}')"><i class="fas fa-heart"></i></button></div>
       ${c.user === currentUserDoc.username ? `<button class="delete-chapter" onclick="event.stopPropagation();window.deleteChapter('${doc.id}')">Del</button>` : ""}
     </div>`;
         }
         container.innerHTML = html;
+        updateBadges();
       }
       window.viewChapter = async function (id) {
-        const doc = await db.collection("chapters").doc(id).get();
-        if (!doc.exists) return;
-        const c = doc.data();
-        alert(`📖 ${c.text}\n❤️ ${c.likes?.length || 0} likes`);
+        const chapterRef = db.collection("chapters").doc(id);
+        const chapter = await chapterRef.get();
+        if (!chapter.exists) return;
+        const c = chapter.data();
+        if (!c.viewedBy?.includes(currentUserDoc.username)) {
+          const newViews = (c.views || 0) + 1;
+          const viewedBy = c.viewedBy
+            ? [...c.viewedBy, currentUserDoc.username]
+            : [currentUserDoc.username];
+          await chapterRef.update({ views: newViews, viewedBy });
+          renderChapters();
+        }
+        alert(
+          `📖 ${c.text}\n❤️ ${c.likes?.length || 0} likes\n👁️ ${c.views || 0} views`,
+        );
       };
       window.likeChapter = async function (id) {
         const chapterRef = db.collection("chapters").doc(id);
@@ -1727,39 +1907,102 @@
       async function postChapter() {
         const text = document.getElementById("chapterText").value.trim();
         if (!text) return;
+        const tierRef = db.collection("tiers").doc(currentUserDoc.username);
+        const tierDoc = await tierRef.get();
+        const tierData = tierDoc.exists
+          ? tierDoc.data()
+          : {
+              tier: 0,
+              lastPostDate: null,
+              weeklyChapters: 0,
+              monthlyChapters: 0,
+            };
+        let newTier = tierData.tier + 1;
+        let newWeekly = (tierData.weeklyChapters || 0) + 1;
+        let newMonthly = (tierData.monthlyChapters || 0) + 1;
+        const now = new Date();
+        const weekStart = getWeekStart(now);
+        const monthStart = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1,
+        ).toDateString();
+        await tierRef.set(
+          {
+            tier: newTier,
+            lastPostDate: now,
+            streak:
+              tierData.lastPostDate &&
+              new Date(tierData.lastPostDate).toDateString() ===
+                new Date(now.setDate(now.getDate() - 1)).toDateString()
+                ? (tierData.streak || 0) + 1
+                : 1,
+            weeklyChapters: newWeekly,
+            monthlyChapters: newMonthly,
+            weekReset: weekStart,
+            monthReset: monthStart,
+          },
+          { merge: true },
+        );
         await db.collection("chapters").add({
           user: currentUserDoc.username,
           text: text,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           likes: [],
+          views: 0,
+          viewedBy: [],
         });
-        const tierRef = db.collection("tiers").doc(currentUserDoc.username);
-        const tierDoc = await tierRef.get();
-        const currentTier = tierDoc.exists ? tierDoc.data().tier : 0;
-        await tierRef.set(
-          {
-            tier: currentTier + 1,
-            lastPostDate: new Date(),
-            streak: firebase.firestore.FieldValue.increment(1),
-          },
-          { merge: true },
-        );
         closeModal("chapterModal");
         document.getElementById("chapterText").value = "";
         renderChapters();
         renderLeaderboard();
+        renderWinners();
         alert("Chapter posted! +1 Tier point");
       }
-
-      // ==================== LEADERBOARD ====================
-      function getTierName(tier) {
-        if (tier >= 50) return "🏆 LEGEND";
-        if (tier >= 30) return "💎 MASTER";
-        if (tier >= 20) return "🥇 ELITE";
-        if (tier >= 10) return "🥈 ADVANCED";
-        if (tier >= 5) return "🥉 NOVICE";
-        if (tier >= 1) return "🌱 BEGINNER";
-        return "📘 ROOKIE";
+      function getWeekStart(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(d.setDate(diff)).toDateString();
+      }
+      async function renderWinners() {
+        const tiersSnap = await db.collection("tiers").get();
+        let weeklyWinner = { username: null, count: 0 };
+        let monthlyWinner = { username: null, count: 0 };
+        const now = new Date();
+        const currentWeekStart = getWeekStart(now);
+        const currentMonthStart = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1,
+        ).toDateString();
+        for (const doc of tiersSnap.docs) {
+          const data = doc.data();
+          if (
+            data.weekReset === currentWeekStart &&
+            (data.weeklyChapters || 0) > weeklyWinner.count
+          ) {
+            weeklyWinner = { username: doc.id, count: data.weeklyChapters };
+          }
+          if (
+            data.monthReset === currentMonthStart &&
+            (data.monthlyChapters || 0) > monthlyWinner.count
+          ) {
+            monthlyWinner = { username: doc.id, count: data.monthlyChapters };
+          }
+        }
+        const weeklyDiv = document.getElementById("weeklyWinnerBox");
+        const monthlyDiv = document.getElementById("monthlyWinnerBox");
+        if (weeklyWinner.username && usersCache[weeklyWinner.username]) {
+          weeklyDiv.innerHTML = `<div class="winner-trophy">🏆</div><div><div class="friend-name">Weekly Champion</div><div class="friend-name" style="font-size:18px;">${usersCache[weeklyWinner.username].displayName}</div><div class="friend-preview">${weeklyWinner.count} chapters this week</div></div>`;
+        } else {
+          weeklyDiv.innerHTML = `<div class="winner-trophy">⏳</div><div><div class="friend-name">Weekly Champion</div><div class="friend-preview">No chapters yet this week</div></div>`;
+        }
+        if (monthlyWinner.username && usersCache[monthlyWinner.username]) {
+          monthlyDiv.innerHTML = `<div class="winner-trophy">👑</div><div><div class="friend-name">Monthly Champion</div><div class="friend-name" style="font-size:18px;">${usersCache[monthlyWinner.username].displayName}</div><div class="friend-preview">${monthlyWinner.count} chapters this month</div></div>`;
+        } else {
+          monthlyDiv.innerHTML = `<div class="winner-trophy">⏳</div><div><div class="friend-name">Monthly Champion</div><div class="friend-preview">No chapters yet this month</div></div>`;
+        }
       }
       async function renderLeaderboard() {
         const tiersSnap = await db
@@ -1769,26 +2012,35 @@
         const container = document.getElementById("leaderboardList");
         if (!container) return;
         if (tiersSnap.empty) {
-          container.innerHTML = '<div class="empty">No data</div>';
+          container.innerHTML =
+            '<div class="empty">No tier data yet. Post a chapter to appear!</div>';
           return;
         }
-        let html = `<div class="leaderboard-header"><span>Rank</span><span>User</span><span>Tier</span></div>`;
+        let html = `<div class="leaderboard-header"><span>Rank</span><span>User</span><span>Tier Level</span></div>`;
         let idx = 1;
         for (const doc of tiersSnap.docs) {
           const data = doc.data();
+          if (data.tier === 0) continue;
           const userDoc = await db.collection("users").doc(doc.id).get();
           const displayName = userDoc.exists
             ? userDoc.data().displayName
             : doc.id;
+          usersCache[doc.id] = { displayName };
           html += `<div class="leaderboard-item"><div class="leaderboard-rank">#${idx++}</div><div>🏆</div><div style="flex:1"><div class="friend-name">${escapeHtml(displayName)}</div></div><div><span class="tier-badge">${getTierName(data.tier)} (${data.tier})</span></div></div>`;
         }
         container.innerHTML = html;
       }
-      function renderWinners() {
-        // optional
+      function getTierName(tier) {
+        if (tier >= 50) return "🏆 LEGEND";
+        if (tier >= 30) return "💎 MASTER";
+        if (tier >= 20) return "🥇 ELITE";
+        if (tier >= 10) return "🥈 ADVANCED";
+        if (tier >= 5) return "🥉 NOVICE";
+        if (tier >= 1) return "🌱 BEGINNER";
+        return "📘 ROOKIE";
       }
 
-      // ==================== PROFILE & DELETE ACCOUNT (WITH SYNCED PICTURE) ====================
+      // ==================== PROFILE & DELETE ACCOUNT ====================
       async function updateAvatar() {
         const avatar = document.getElementById("currentUserAvatar");
         if (!avatar || !currentUserDoc) return;
@@ -1837,9 +2089,7 @@
             .collection("users")
             .doc(currentUserDoc.username)
             .update({ profilePic: downloadUrl });
-          // Update own avatar immediately
           updateAvatar();
-          // Also refresh friends list so others see new picture (their refresh will pick it up)
         }
         closeModal("editProfileModal");
         refreshAllUI();
@@ -1886,7 +2136,7 @@
         logout();
       }
 
-      // ==================== MEDIA, VOICE, EMOJI, TAGS ====================
+      // ==================== MEDIA ATTACHMENTS ====================
       function setupAttachments() {
         const attachMenu = document.getElementById("attachMenu");
         const attachBtn = document.getElementById("attachBtn");
@@ -1928,49 +2178,8 @@
         document.getElementById("attachFile").onclick = () =>
           handleFileUpload("*/*", "file");
       }
-      async function sendMediaMessage(to, type, url, fileName) {
-        const chatId = [currentUserDoc.username, to].sort().join("_");
-        await db.collection("messages").doc(chatId).collection("chat").add({
-          from: currentUserDoc.username,
-          type: type,
-          data: url,
-          fileName: fileName,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        if (currentChatId === to && currentChatType === "friend")
-          renderMessages(to);
-      }
-      async function sendGroupMediaMessage(groupId, type, url, fileName) {
-        await db
-          .collection("groupMessages")
-          .doc(groupId)
-          .collection("chat")
-          .add({
-            from: currentUserDoc.username,
-            type: type,
-            data: url,
-            fileName: fileName,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          });
-        if (currentChatId === groupId && currentChatType === "group")
-          renderGroupMessages(groupId);
-      }
-      async function sendHubMediaMessage(hubId, type, url, fileName) {
-        await db.collection("hubMessages").doc(hubId).collection("chat").add({
-          from: currentUserDoc.username,
-          type: type,
-          data: url,
-          fileName: fileName,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        if (currentChatId === hubId && currentChatType === "hub")
-          renderHubMessages(hubId);
-      }
+
       // Voice recording
-      let mediaRecorder = null;
-      let audioChunks = [];
-      let isRecording = false;
-      const voiceBtn = document.getElementById("voiceRecordBtn");
       voiceBtn.onclick = async () => {
         if (!currentChatId) {
           alert("Open a chat first");
@@ -1982,34 +2191,44 @@
           voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
           isRecording = false;
         } else {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
-          mediaRecorder = new MediaRecorder(stream);
-          audioChunks = [];
-          mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-          mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-            const storageRef = storage
-              .ref()
-              .child(`voiceMessages/${Date.now()}.webm`);
-            await storageRef.put(audioBlob);
-            const url = await storageRef.getDownloadURL();
-            if (currentChatType === "friend")
-              sendMediaMessage(currentChatId, "voice", url, "voice.webm");
-            else if (currentChatType === "group")
-              sendGroupMediaMessage(currentChatId, "voice", url, "voice.webm");
-            else if (currentChatType === "hub")
-              sendHubMediaMessage(currentChatId, "voice", url, "voice.webm");
-            stream.getTracks().forEach((t) => t.stop());
-          };
-          mediaRecorder.start();
-          voiceBtn.classList.add("recording-active");
-          voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
-          isRecording = true;
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+              const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+              const storageRef = storage
+                .ref()
+                .child(`voiceMessages/${Date.now()}.webm`);
+              await storageRef.put(audioBlob);
+              const url = await storageRef.getDownloadURL();
+              if (currentChatType === "friend")
+                sendMediaMessage(currentChatId, "voice", url, "voice.webm");
+              else if (currentChatType === "group")
+                sendGroupMediaMessage(
+                  currentChatId,
+                  "voice",
+                  url,
+                  "voice.webm",
+                );
+              else if (currentChatType === "hub")
+                sendHubMediaMessage(currentChatId, "voice", url, "voice.webm");
+              stream.getTracks().forEach((t) => t.stop());
+            };
+            mediaRecorder.start();
+            voiceBtn.classList.add("recording-active");
+            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            isRecording = true;
+          } catch (err) {
+            alert("Microphone access denied or not available");
+          }
         }
       };
-      // Emoji picker
+
+      // ==================== EMOJI PICKER ====================
       const emojis = [
         "😀",
         "😃",
@@ -2179,9 +2398,10 @@
             picker.classList.remove("show");
         });
       }
-      // Tag system
+
+      // ==================== TAG SYSTEM (searchable friends list, inserts @username) ====================
       function showTagPopup() {
-        const friends = currentUserDoc.friends || [];
+        const friends = currentUserDoc?.friends || [];
         if (!friends.length) {
           alert("No friends to tag");
           return;
@@ -2189,29 +2409,35 @@
         const popup = document.getElementById("tagSearchPopup");
         const list = document.getElementById("tagFriendsList");
         const search = document.getElementById("tagSearchInput");
-        function render(searchTerm = "") {
+        if (!popup) return;
+        async function render(searchTerm = "") {
+          const term = searchTerm.toLowerCase();
           const filtered = friends.filter((f) =>
-            f.toLowerCase().includes(searchTerm.toLowerCase()),
+            f.toLowerCase().includes(term),
           );
           if (!filtered.length) {
             list.innerHTML =
-              '<div style="padding:12px;text-align:center;color:#888;">No friends</div>';
+              '<div style="padding:12px;text-align:center;color:#888;">No friends found</div>';
             return;
           }
-          list.innerHTML = filtered
-            .map(
-              (f) => `<div class="tag-friend-item" data-name="${f}">
-      <div class="tag-friend-avatar">${f.charAt(0).toUpperCase()}</div>
-      <div class="tag-friend-name">${f}</div>
-    </div>`,
-            )
-            .join("");
+          let html = "";
+          for (const f of filtered) {
+            const userDoc = await db.collection("users").doc(f).get();
+            const displayName = userDoc.exists ? userDoc.data().displayName : f;
+            html += `<div class="tag-friend-item" data-username="${escapeHtml(f)}" data-display="${escapeHtml(displayName)}">
+        <div class="tag-friend-avatar">${displayName.charAt(0).toUpperCase()}</div>
+        <div class="tag-friend-name">${escapeHtml(displayName)}</div>
+      </div>`;
+          }
+          list.innerHTML = html;
           document.querySelectorAll(".tag-friend-item").forEach((item) => {
             item.onclick = () => {
-              const name = item.getAttribute("data-name");
+              const username = item.getAttribute("data-username");
               const input = document.getElementById("messageInput");
-              input.value += `@${name} `;
-              input.focus();
+              if (input) {
+                input.value += `@${username} `;
+                input.focus();
+              }
               popup.classList.remove("show");
             };
           });
@@ -2230,7 +2456,8 @@
           });
         }, 100);
       }
-      // Theme
+
+      // ==================== THEME ====================
       function toggleTheme() {
         document.body.classList.toggle("light-theme");
         localStorage.setItem(
@@ -2238,7 +2465,8 @@
           document.body.classList.contains("light-theme") ? "light" : "dark",
         );
       }
-      // Initialisation
+
+      // ==================== INITIALISATION ====================
       document.addEventListener("DOMContentLoaded", async () => {
         buildEmojiPicker();
         setupAttachments();
@@ -2314,6 +2542,29 @@
           document.getElementById("loginModal").classList.remove("hidden");
         };
         window.closeChat = closeChat;
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) logoutBtn.onclick = () => logout();
+        window.showImagePreview = (url) => {
+          const modal = document.createElement("div");
+          modal.style.position = "fixed";
+          modal.style.top = 0;
+          modal.style.left = 0;
+          modal.style.width = "100%";
+          modal.style.height = "100%";
+          modal.style.background = "rgba(0,0,0,0.95)";
+          modal.style.zIndex = 1000;
+          modal.style.display = "flex";
+          modal.style.alignItems = "center";
+          modal.style.justifyContent = "center";
+          modal.onclick = () => modal.remove();
+          const img = document.createElement("img");
+          img.src = url;
+          img.style.maxWidth = "90%";
+          img.style.maxHeight = "90%";
+          img.style.borderRadius = "20px";
+          modal.appendChild(img);
+          document.body.appendChild(modal);
+        };
         auth.onAuthStateChanged(async (user) => {
           if (user) {
             const email = user.email;
