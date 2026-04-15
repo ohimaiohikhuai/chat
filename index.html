@@ -13,7 +13,6 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300d4ff'%3E%3Cpath d='M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E"
     />
     <style>
-      /* ===== FULL STYLES (same as before) ===== */
       * {
         margin: 0;
         padding: 0;
@@ -113,7 +112,7 @@
       }
       .header {
         background: #121212;
-        padding: 16px;
+        padding: 12px;
         border-radius: 20px;
         margin-bottom: 16px;
         display: flex;
@@ -134,48 +133,48 @@
         flex-wrap: wrap;
       }
       .app-logo {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         background: #00d4ff;
-        border-radius: 50% 50% 45% 45%;
+        border-radius: 50%;
         position: relative;
         animation: float 2s ease-in-out infinite;
       }
       .app-logo .eyes {
         position: absolute;
-        top: 10px;
-        left: 7px;
-        right: 7px;
+        top: 8px;
+        left: 6px;
+        right: 6px;
         display: flex;
         justify-content: space-between;
       }
       .app-logo .eyes span {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
         background: #0a0a0a;
         border-radius: 50%;
       }
       .app-logo .mouth {
         position: absolute;
-        bottom: 8px;
+        bottom: 6px;
         left: 50%;
         transform: translateX(-50%);
-        width: 10px;
-        height: 5px;
+        width: 8px;
+        height: 4px;
         background: #0a0a0a;
-        border-radius: 0 0 8px 8px;
+        border-radius: 0 0 4px 4px;
       }
       @keyframes float {
         0%,
         100% {
-          transform: translateY(0px);
+          transform: translateY(0);
         }
         50% {
-          transform: translateY(-3px);
+          transform: translateY(-2px);
         }
       }
       .logo-text {
-        font-size: 22px;
+        font-size: 20px;
         font-weight: bold;
         background: linear-gradient(135deg, #00d4ff, #0088ff);
         -webkit-background-clip: text;
@@ -183,14 +182,14 @@
         color: transparent;
       }
       .user-avatar {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         background: #1a2a3a;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 18px;
         color: #00d4ff;
         overflow: hidden;
         background-size: cover;
@@ -307,6 +306,14 @@
         padding: 2px 8px;
         font-size: 11px;
       }
+      .list-badge {
+        background: #ff3b30;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 11px;
+        margin-left: 8px;
+      }
       .tier-badge {
         background: linear-gradient(135deg, #ffd700, #ff8c00);
         color: #000;
@@ -379,6 +386,7 @@
         padding: 8px 12px;
         border-radius: 20px;
         word-break: break-word;
+        position: relative;
       }
       .message-sent {
         background: #00d4ff;
@@ -394,6 +402,12 @@
         font-size: 10px;
         opacity: 0.7;
         margin-top: 4px;
+      }
+      .message-sender-name {
+        font-size: 11px;
+        font-weight: bold;
+        margin-bottom: 2px;
+        color: #00d4ff;
       }
       .media-preview {
         max-width: 200px;
@@ -418,6 +432,13 @@
         align-items: center;
         gap: 8px;
       }
+      .gif-message img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 12px;
+        cursor: pointer;
+        margin-top: 5px;
+      }
       .chat-input {
         display: flex;
         padding: 12px;
@@ -425,6 +446,7 @@
         background: #1c1c1e;
         border-top: 1px solid #333;
         flex-wrap: wrap;
+        align-items: center;
       }
       .chat-input input {
         flex: 1;
@@ -443,21 +465,37 @@
         font-weight: bold;
         cursor: pointer;
         color: black;
+        transition: opacity 0.2s;
+      }
+      .chat-input button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
       .attach-btn,
       .tag-btn,
       .emoji-btn,
-      .voice-record-btn {
+      .voice-record-btn,
+      .gif-btn {
         background: #2c2c2e;
         border: none;
         border-radius: 25px;
         padding: 10px 14px;
         color: white;
         cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .attach-btn:disabled,
+      .tag-btn:disabled,
+      .emoji-btn:disabled,
+      .voice-record-btn:disabled,
+      .gif-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
       .emoji-picker,
       .tag-search-popup,
-      .attach-menu {
+      .attach-menu,
+      .gif-picker {
         position: absolute;
         bottom: 70px;
         left: 12px;
@@ -489,6 +527,37 @@
         gap: 8px;
         flex-wrap: wrap;
         min-width: 200px;
+      }
+      .gif-picker.show {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 280px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .gif-search-input {
+        width: 100%;
+        padding: 8px;
+        border-radius: 20px;
+        border: none;
+        background: #2c2c2e;
+        color: white;
+        outline: none;
+      }
+      .gif-results {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .gif-result {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+        cursor: pointer;
       }
       .tag-search-input {
         width: 100%;
@@ -568,7 +637,7 @@
         border: none;
         color: #888;
         cursor: pointer;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 4px;
       }
@@ -630,6 +699,11 @@
         font-weight: bold;
         cursor: pointer;
         color: black;
+        transition: opacity 0.2s;
+      }
+      .modal-card button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
       .modal-card .danger-button {
         background: #ff4444;
@@ -685,6 +759,12 @@
         cursor: pointer;
         text-decoration: underline;
       }
+      .mention-sender {
+        color: #000000;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: underline;
+      }
       .section-title {
         color: #00d4ff;
         margin: 16px 0 8px 0;
@@ -719,6 +799,66 @@
         100% {
           opacity: 1;
         }
+      }
+      .message-menu {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        color: #888;
+      }
+      .message-menu:hover {
+        color: #00d4ff;
+      }
+      .quoted-message {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 6px 10px;
+        border-radius: 12px;
+        margin-bottom: 6px;
+        font-size: 12px;
+        border-left: 3px solid #00d4ff;
+        cursor: pointer;
+      }
+      .quoted-message:hover {
+        background: rgba(0, 212, 255, 0.2);
+      }
+      .loading-indicator {
+        display: inline-block;
+        margin-left: 10px;
+        font-size: 12px;
+        color: #00d4ff;
+        animation: blink 1s infinite;
+      }
+      @keyframes blink {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      .forward-selector {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .forward-item {
+        padding: 10px;
+        border-bottom: 1px solid #333;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .forward-item:hover {
+        background: #00d4ff33;
+      }
+      .cancel-forward-btn {
+        margin-top: 10px;
+        background: #333;
       }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -903,6 +1043,9 @@
           <button class="voice-record-btn" id="voiceRecordBtn">
             <i class="fas fa-microphone"></i>
           </button>
+          <button class="gif-btn" id="gifBtn">
+            <i class="fas fa-photo-video"></i> GIF
+          </button>
           <button id="sendMsgBtn">Send</button>
         </div>
         <div id="attachMenu" class="attach-menu">
@@ -919,6 +1062,15 @@
             placeholder="Search friends..."
           />
           <div id="tagFriendsList"></div>
+        </div>
+        <div id="gifPicker" class="gif-picker">
+          <input
+            type="text"
+            id="gifSearchInput"
+            class="gif-search-input"
+            placeholder="Search GIFs..."
+          />
+          <div id="gifResults" class="gif-results"></div>
         </div>
       </div>
 
@@ -1068,14 +1220,23 @@
       const storage = firebase.storage();
       const auth = firebase.auth();
 
-      // Global state
+      const GIPHY_API_KEY = "On2HwNckx1yjG6TK0ixJVLVSKGN0My42";
+
+      // ==================== GLOBAL STATE ====================
       let currentUser = null;
       let currentUserDoc = null;
       let currentChatId = null;
       let currentChatType = "friend";
       let unsubscribeListeners = [];
-      let messagesCache = {};
       let usersCache = {};
+      let groupsCache = [];
+      let hubsCache = [];
+      let chaptersCache = [];
+      let replyToMessage = null;
+      let blockedUsers = new Set();
+      let groupUnreadCache = {};
+      let hubUnreadCache = {};
+      let messagesCache = {};
 
       // Voice recording
       let mediaRecorder = null;
@@ -1083,7 +1244,7 @@
       let isRecording = false;
       const voiceBtn = document.getElementById("voiceRecordBtn");
 
-      // Helper functions
+      // ==================== HELPER FUNCTIONS ====================
       function escapeHtml(str) {
         if (!str) return "";
         return String(str).replace(/[&<>]/g, (m) =>
@@ -1106,15 +1267,6 @@
           if (tab.getAttribute("data-tab") === screen)
             tab.classList.add("active");
         });
-        if (screen === "chats") {
-          renderFriends();
-          renderPendingRequests();
-        }
-        if (screen === "groups") renderGroups();
-        if (screen === "hubs") renderHubs();
-        if (screen === "chapters") renderChapters();
-        if (screen === "leaderboard") renderLeaderboard();
-        if (screen === "winners") renderWinners();
       }
       window.showScreen = showScreen;
       function closeModal(id) {
@@ -1132,16 +1284,26 @@
           alert("Enter username and password");
           return;
         }
+        const btn = document.getElementById("loginBtn");
+        const originalText = btn.innerText;
+        btn.innerText = "Logging in...";
+        btn.disabled = true;
         try {
           const email = username + "@chatrix.local";
           await auth.signInWithEmailAndPassword(email, password);
           await loadCurrentUserData(username);
           document.getElementById("loginModal").classList.add("hidden");
-          refreshAllUI();
+          startRealtimeListeners();
           updateAvatar();
           showScreen("chats");
+          deleteOldChapters();
         } catch (err) {
-          alert("Invalid username or password");
+          alert(
+            "Invalid username or password. Make sure Firebase rules are set to allow read/write.",
+          );
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
         }
       }
       async function doSignup() {
@@ -1163,6 +1325,10 @@
           alert("Password must be at least 6 characters");
           return;
         }
+        const btn = document.getElementById("signupBtn");
+        const originalText = btn.innerText;
+        btn.innerText = "Creating account...";
+        btn.disabled = true;
         try {
           const userDoc = await db.collection("users").doc(username).get();
           if (userDoc.exists) {
@@ -1198,12 +1364,19 @@
           document.getElementById("loginModal").classList.remove("hidden");
         } catch (err) {
           alert("Signup failed: " + err.message);
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
         }
       }
       async function loadCurrentUserData(username) {
         const doc = await db.collection("users").doc(username).get();
         if (doc.exists) {
           currentUserDoc = { id: doc.id, ...doc.data() };
+          const blockedDoc = await db.collection("blocked").doc(username).get();
+          if (blockedDoc.exists)
+            blockedUsers = new Set(blockedDoc.data().list || []);
+          else blockedUsers.clear();
         } else {
           await db.collection("users").doc(username).set({
             username: username,
@@ -1216,6 +1389,7 @@
             displayName: username,
             friends: [],
           };
+          blockedUsers.clear();
         }
       }
       function logout() {
@@ -1232,80 +1406,179 @@
               .forEach((s) => s.classList.remove("active"));
             const loginModal = document.getElementById("loginModal");
             if (loginModal) loginModal.classList.remove("hidden");
-            messagesCache = {};
           })
           .catch((err) => console.error("Logout error:", err));
       }
       window.logout = logout;
 
-      // ==================== REAL-TIME UI REFRESH ====================
-      function refreshAllUI() {
+      // ==================== BLOCK / UNBLOCK ====================
+      async function blockUser(username) {
         if (!currentUserDoc) return;
-        renderFriends();
-        renderPendingRequests();
-        renderGroups();
-        renderHubs();
-        renderChapters();
-        renderLeaderboard();
-        renderWinners();
-        if (currentChatId && currentChatType === "friend")
-          renderMessages(currentChatId);
-        else if (currentChatId && currentChatType === "group")
-          renderGroupMessages(currentChatId);
-        else if (currentChatId && currentChatType === "hub")
-          renderHubMessages(currentChatId);
-        updateBadges();
-      }
-      async function updateBadges() {
-        let unread = 0;
-        if (messagesCache[currentUserDoc?.username]) {
-          for (let f in messagesCache[currentUserDoc.username]) {
-            unread += messagesCache[currentUserDoc.username][f].filter(
-              (m) => m.from === f && !m.read,
-            ).length;
-          }
+        blockedUsers.add(username);
+        await db
+          .collection("blocked")
+          .doc(currentUserDoc.username)
+          .set({ list: Array.from(blockedUsers) });
+        if (currentUserDoc.friends.includes(username)) {
+          await db
+            .collection("users")
+            .doc(currentUserDoc.username)
+            .update({
+              friends: firebase.firestore.FieldValue.arrayRemove(username),
+            });
+          await db
+            .collection("users")
+            .doc(username)
+            .update({
+              friends: firebase.firestore.FieldValue.arrayRemove(
+                currentUserDoc.username,
+              ),
+            });
         }
-        document.getElementById("chatsTabBadge").innerHTML = unread;
-        document
-          .getElementById("chatsTabBadge")
-          .classList.toggle("hidden", unread === 0);
-        const friends = currentUserDoc?.friends || [];
-        const chaptersSnap = await db.collection("chapters").get();
-        let newChapters = 0;
-        chaptersSnap.forEach((doc) => {
-          const c = doc.data();
-          if (
-            friends.includes(c.user) &&
-            !c.viewedBy?.includes(currentUserDoc.username)
-          )
-            newChapters++;
+        refreshAllUI();
+        alert(`Blocked ${username}`);
+      }
+      async function unblockUser(username) {
+        if (!currentUserDoc) return;
+        blockedUsers.delete(username);
+        await db
+          .collection("blocked")
+          .doc(currentUserDoc.username)
+          .set({ list: Array.from(blockedUsers) });
+        refreshAllUI();
+        alert(`Unblocked ${username}`);
+      }
+      window.blockUser = blockUser;
+      window.unblockUser = unblockUser;
+
+      // ==================== REAL-TIME LISTENERS ====================
+      function startRealtimeListeners() {
+        if (!currentUserDoc) return;
+        unsubscribeListeners.forEach((fn) => fn());
+        unsubscribeListeners = [];
+
+        const userUnsub = db
+          .collection("users")
+          .doc(currentUserDoc.username)
+          .onSnapshot((doc) => {
+            if (doc.exists) currentUserDoc = { id: doc.id, ...doc.data() };
+            renderFriends();
+            renderPendingRequests();
+            updateBadges();
+          });
+        unsubscribeListeners.push(userUnsub);
+
+        const groupsUnsub = db
+          .collection("groups")
+          .where("members", "array-contains", currentUserDoc.username)
+          .onSnapshot((snapshot) => {
+            groupsCache = [];
+            snapshot.forEach((doc) =>
+              groupsCache.push({ id: doc.id, ...doc.data() }),
+            );
+            renderGroups();
+          });
+        unsubscribeListeners.push(groupsUnsub);
+
+        const hubsUnsub = db
+          .collection("hubs")
+          .where("members", "array-contains", currentUserDoc.username)
+          .onSnapshot((snapshot) => {
+            hubsCache = [];
+            snapshot.forEach((doc) =>
+              hubsCache.push({ id: doc.id, ...doc.data() }),
+            );
+            renderHubs();
+          });
+        unsubscribeListeners.push(hubsUnsub);
+
+        const chaptersUnsub = db
+          .collection("chapters")
+          .orderBy("timestamp", "desc")
+          .onSnapshot((snapshot) => {
+            chaptersCache = [];
+            snapshot.forEach((doc) =>
+              chaptersCache.push({ id: doc.id, ...doc.data() }),
+            );
+            renderChapters();
+            updateBadges();
+          });
+        unsubscribeListeners.push(chaptersUnsub);
+
+        const tiersUnsub = db.collection("tiers").onSnapshot(() => {
+          renderLeaderboard();
+          renderWinners();
         });
-        document.getElementById("chaptersTabBadge").innerHTML = newChapters;
-        document
-          .getElementById("chaptersTabBadge")
-          .classList.toggle("hidden", newChapters === 0);
+        unsubscribeListeners.push(tiersUnsub);
+
+        const reqUnsub = db
+          .collection("friendRequests")
+          .where("to", "==", currentUserDoc.username)
+          .where("status", "==", "pending")
+          .onSnapshot(() => renderPendingRequests());
+        unsubscribeListeners.push(reqUnsub);
       }
 
-      // ==================== RENDER MESSAGES WITH CLICKABLE MENTIONS ====================
-      function renderMessagesWithMentions(text) {
+      // ==================== MESSAGE HELPERS ====================
+      function getMessagePreview(m) {
+        if (m.type === "image") return "📷 Image";
+        if (m.type === "video") return "🎥 Video";
+        if (m.type === "file") return `📎 ${m.fileName || "File"}`;
+        if (m.type === "voice") return "🎤 Voice message";
+        if (m.type === "gif") return "🎞️ GIF";
+        return m.text
+          ? m.text.length > 50
+            ? m.text.substring(0, 50) + "..."
+            : m.text
+          : "Message";
+      }
+
+      async function jumpToOriginalMessage(
+        originalMsgId,
+        originalChatId,
+        originalChatType,
+      ) {
+        if (currentChatId) closeChat();
+        await openChat(originalChatId, originalChatType);
+        setTimeout(() => {
+          const targetElement = document.querySelector(
+            `.message-bubble-content[data-msg-id="${originalMsgId}"]`,
+          );
+          if (targetElement) {
+            targetElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+            targetElement.style.backgroundColor = "#ffcc00";
+            setTimeout(() => {
+              targetElement.style.backgroundColor = "";
+            }, 2000);
+          } else {
+            alert("Original message not found in this chat");
+          }
+        }, 1000);
+      }
+
+      function renderMessagesWithMentions(text, isSender) {
         const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+        const mentionClass = isSender ? "mention-sender" : "mention";
         return text.replace(mentionRegex, (match, username) => {
-          return `<span class="mention" data-username="${escapeHtml(username)}">${escapeHtml(match)}</span>`;
+          return `<span class="${mentionClass}" data-username="${escapeHtml(username)}">${escapeHtml(match)}</span>`;
         });
       }
-
       async function handleMentionClick(username) {
         if (!currentUserDoc) return;
         if (username === currentUserDoc.username) {
           alert("You mentioned yourself");
           return;
         }
-        // Check if already friends
+        if (blockedUsers.has(username)) {
+          alert("You have blocked this user.");
+          return;
+        }
         if (currentUserDoc.friends.includes(username)) {
-          // Open chat with that friend
           openChat(username, "friend");
         } else {
-          // Send friend request if not already sent
           const existingReq = await db
             .collection("friendRequests")
             .where("from", "==", currentUserDoc.username)
@@ -1323,12 +1596,11 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           });
           alert(`Friend request sent to ${username}`);
-          refreshAllUI();
         }
       }
-
       function attachMentionClickHandlers() {
-        document.querySelectorAll(".mention").forEach((el) => {
+        document.querySelectorAll(".mention, .mention-sender").forEach((el) => {
+          el.onclick = null;
           el.onclick = (e) => {
             e.stopPropagation();
             const username = el.getAttribute("data-username");
@@ -1336,23 +1608,355 @@
           };
         });
       }
-
-      function renderMediaContent(m) {
+      function renderMediaContent(
+        m,
+        chatType,
+        showSender = false,
+        senderName = "",
+        messageId = null,
+        originalMsg = null,
+      ) {
+        let content = "";
+        let quotedHtml = "";
+        if (originalMsg) {
+          const preview = getMessagePreview(originalMsg);
+          quotedHtml = `<div class="quoted-message" data-msg-id="${originalMsg.id}" data-chat-id="${originalMsg.chatId}" data-chat-type="${originalMsg.chatType}">↩️ ${escapeHtml(preview)}</div>`;
+        }
         if (m.type === "image")
-          return `<img src="${m.data}" class="media-preview" onclick="window.showImagePreview('${m.data}')">`;
-        if (m.type === "video")
-          return `<video controls class="media-preview"><source src="${m.data}"></video>`;
-        if (m.type === "file")
-          return `<div class="file-message"><i class="fas fa-file"></i> <a href="${m.data}" target="_blank">${m.fileName || "Download"}</a></div>`;
-        if (m.type === "voice")
-          return `<div class="voice-message"><i class="fas fa-microphone"></i> <audio controls src="${m.data}"></audio></div>`;
-        return renderMessagesWithMentions(escapeHtml(m.text));
+          content = `<img src="${m.data}" class="media-preview" onclick="window.showImagePreview('${m.data}')">`;
+        else if (m.type === "video")
+          content = `<video controls class="media-preview"><source src="${m.data}"></video>`;
+        else if (m.type === "file")
+          content = `<div class="file-message"><i class="fas fa-file"></i> <a href="${m.data}" target="_blank">${m.fileName || "Download"}</a></div>`;
+        else if (m.type === "voice")
+          content = `<div class="voice-message"><i class="fas fa-microphone"></i> <audio controls src="${m.data}"></audio></div>`;
+        else if (m.type === "gif")
+          content = `<div class="gif-message"><img src="${m.data}" class="media-preview" onclick="window.showImagePreview('${m.data}')"></div>`;
+        else
+          content = renderMessagesWithMentions(
+            escapeHtml(m.text),
+            m.from === currentUserDoc?.username,
+          );
+
+        let senderHtml = "";
+        if (
+          showSender &&
+          senderName &&
+          m.from !== currentUserDoc?.username &&
+          chatType === "group"
+        ) {
+          senderHtml = `<div class="message-sender-name">${escapeHtml(senderName)}</div>`;
+        }
+        const menuHtml = `<div class="message-menu" data-msg-id="${messageId}" data-msg-type="${m.type || "text"}" data-msg-text="${escapeHtml(m.text || "")}" data-msg-data="${m.data || ""}" data-msg-file="${m.fileName || ""}" data-msg-from="${m.from}" data-msg-time="${m.timestamp}"><i class="fas fa-ellipsis-v"></i></div>`;
+        return `<div class="message-bubble-content" style="position:relative;" data-msg-id="${messageId}" ondblclick="window.editOrDeleteMessage('${messageId}', '${m.from}', '${escapeHtml(m.text || "").replace(/'/g, "\\'")}')">${menuHtml}${quotedHtml}${senderHtml}${content}</div>`;
+      }
+      window.editOrDeleteMessage = async function (
+        msgId,
+        msgFrom,
+        currentText,
+      ) {
+        if (msgFrom !== currentUserDoc.username) {
+          alert("You can only edit or delete your own messages.");
+          return;
+        }
+        const action = prompt(
+          "Edit or Delete?\nType 'edit' to edit, 'delete' to delete.",
+        );
+        if (action === null) return;
+        if (action.toLowerCase() === "delete") {
+          if (confirm("Delete this message?")) {
+            if (currentChatType === "friend") {
+              const chatId = [currentUserDoc.username, currentChatId]
+                .sort()
+                .join("_");
+              await db
+                .collection("messages")
+                .doc(chatId)
+                .collection("chat")
+                .doc(msgId)
+                .delete();
+            } else if (currentChatType === "group") {
+              await db
+                .collection("groupMessages")
+                .doc(currentChatId)
+                .collection("chat")
+                .doc(msgId)
+                .delete();
+            } else if (currentChatType === "hub") {
+              await db
+                .collection("hubMessages")
+                .doc(currentChatId)
+                .collection("chat")
+                .doc(msgId)
+                .delete();
+            }
+            alert("Message deleted.");
+          }
+        } else if (action.toLowerCase() === "edit") {
+          const newText = prompt("Edit your message:", currentText);
+          if (newText && newText !== currentText) {
+            if (currentChatType === "friend") {
+              const chatId = [currentUserDoc.username, currentChatId]
+                .sort()
+                .join("_");
+              await db
+                .collection("messages")
+                .doc(chatId)
+                .collection("chat")
+                .doc(msgId)
+                .update({ text: newText });
+            } else if (currentChatType === "group") {
+              await db
+                .collection("groupMessages")
+                .doc(currentChatId)
+                .collection("chat")
+                .doc(msgId)
+                .update({ text: newText });
+            } else if (currentChatType === "hub") {
+              await db
+                .collection("hubMessages")
+                .doc(currentChatId)
+                .collection("chat")
+                .doc(msgId)
+                .update({ text: newText });
+            }
+            alert("Message updated.");
+          }
+        } else {
+          alert("Invalid option. Please type 'edit' or 'delete'.");
+        }
+      };
+      function attachMessageMenuHandlers() {
+        document.querySelectorAll(".message-menu").forEach((el) => {
+          el.onclick = (e) => {
+            e.stopPropagation();
+            const msgId = el.getAttribute("data-msg-id");
+            const msgType = el.getAttribute("data-msg-type");
+            const msgText = el.getAttribute("data-msg-text");
+            const msgData = el.getAttribute("data-msg-data");
+            const msgFile = el.getAttribute("data-msg-file");
+            const msgFrom = el.getAttribute("data-msg-from");
+            const msgTime = el.getAttribute("data-msg-time");
+            const msg = {
+              id: msgId,
+              type: msgType,
+              text: msgText === "undefined" ? undefined : msgText,
+              data: msgData,
+              fileName: msgFile,
+              from: msgFrom,
+              timestamp: msgTime,
+            };
+            const action = confirm(
+              "Reply or Forward?\n\nOK = Reply\nCancel = Forward",
+            );
+            if (action) {
+              replyToMessage = {
+                id: msg.id,
+                chatId: currentChatId,
+                chatType: currentChatType,
+                preview: getMessagePreview(msg),
+                type: msg.type,
+                data: msg.data,
+                fileName: msg.fileName,
+                text: msg.text,
+              };
+              const inputArea = document.querySelector(".chat-input");
+              let existingQuote = document.getElementById("quotePreview");
+              if (existingQuote) existingQuote.remove();
+              const quoteDiv = document.createElement("div");
+              quoteDiv.id = "quotePreview";
+              quoteDiv.className = "quoted-message";
+              quoteDiv.style.margin = "0 0 8px 0";
+              quoteDiv.style.padding = "6px 12px";
+              quoteDiv.style.cursor = "pointer";
+              quoteDiv.innerHTML = `↩️ Replying to: ${escapeHtml(replyToMessage.preview)} <span style="float:right; cursor:pointer;" onclick="this.parentElement.remove(); window.replyToMessage=null;">✖</span>`;
+              quoteDiv.onclick = () => {
+                jumpToOriginalMessage(msg.id, currentChatId, currentChatType);
+              };
+              inputArea.insertBefore(quoteDiv, inputArea.firstChild);
+              document.getElementById("messageInput").focus();
+            } else {
+              showForwardSelector(msg);
+            }
+          };
+        });
+        document.querySelectorAll(".quoted-message").forEach((el) => {
+          if (!el.hasAttribute("data-listener")) {
+            el.setAttribute("data-listener", "true");
+            el.onclick = (e) => {
+              e.stopPropagation();
+              const targetMsgId = el.getAttribute("data-msg-id");
+              const targetChatId = el.getAttribute("data-chat-id");
+              const targetChatType = el.getAttribute("data-chat-type");
+              if (targetMsgId && targetChatId && targetChatType) {
+                jumpToOriginalMessage(
+                  targetMsgId,
+                  targetChatId,
+                  targetChatType,
+                );
+              }
+            };
+          }
+        });
+      }
+      function showForwardSelector(msg) {
+        let destinations = [];
+        currentUserDoc.friends.forEach((f) => {
+          if (!blockedUsers.has(f)) {
+            destinations.push({
+              id: f,
+              name: f,
+              type: "friend",
+              display: `👤 ${f}`,
+            });
+          }
+        });
+        groupsCache.forEach((g) => {
+          destinations.push({
+            id: g.id,
+            name: g.name,
+            type: "group",
+            display: `👥 ${g.name}`,
+          });
+        });
+        hubsCache.forEach((h) => {
+          if (h.creator === currentUserDoc.username) {
+            destinations.push({
+              id: h.id,
+              name: h.name,
+              type: "hub",
+              display: `📡 ${h.name}`,
+            });
+          }
+        });
+        let listHtml = `<div class="forward-selector"><p style="margin-bottom:10px;">Click a destination to forward:</p>`;
+        destinations.forEach((d) => {
+          listHtml += `<div class="forward-item" data-id="${d.id}" data-type="${d.type}">${d.display}</div>`;
+        });
+        listHtml += `<button id="cancelForwardBtn" class="small-btn" style="margin-top:10px; width:100%;">Cancel</button></div>`;
+        const modal = document.createElement("div");
+        modal.className = "modal";
+        modal.style.display = "flex";
+        modal.innerHTML = `<div class="modal-card">${listHtml}</div>`;
+        document.body.appendChild(modal);
+        modal.querySelectorAll(".forward-item").forEach((item) => {
+          item.onclick = async () => {
+            const targetId = item.getAttribute("data-id");
+            const targetType = item.getAttribute("data-type");
+            await forwardMessage(msg, targetId, targetType);
+            modal.remove();
+            alert("Message forwarded!");
+          };
+        });
+        modal.querySelector("#cancelForwardBtn").onclick = () => modal.remove();
+      }
+      async function forwardMessage(msg, targetId, targetType) {
+        let forwardText = `(Forwarded from ${currentUserDoc.displayName}) `;
+        if (msg.type === "text") {
+          forwardText += msg.text;
+          await sendTextMessageToTarget(targetId, targetType, forwardText);
+        } else {
+          await sendMediaToTarget(
+            targetId,
+            targetType,
+            msg.type,
+            msg.data,
+            msg.fileName,
+          );
+        }
+      }
+      async function sendTextMessageToTarget(targetId, targetType, text) {
+        if (targetType === "friend") {
+          if (blockedUsers.has(targetId)) return;
+          const chatId = [currentUserDoc.username, targetId].sort().join("_");
+          await db.collection("messages").doc(chatId).collection("chat").add({
+            from: currentUserDoc.username,
+            text: text,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false,
+          });
+        } else if (targetType === "group") {
+          await db
+            .collection("groupMessages")
+            .doc(targetId)
+            .collection("chat")
+            .add({
+              from: currentUserDoc.username,
+              text: text,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+        } else if (targetType === "hub") {
+          const hub = hubsCache.find((h) => h.id == targetId);
+          if (hub && hub.creator === currentUserDoc.username) {
+            await db
+              .collection("hubMessages")
+              .doc(targetId)
+              .collection("chat")
+              .add({
+                from: currentUserDoc.username,
+                text: text,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+          } else {
+            alert("You cannot forward to this hub (not creator).");
+          }
+        }
+      }
+      async function sendMediaToTarget(
+        targetId,
+        targetType,
+        type,
+        dataUrl,
+        fileName,
+      ) {
+        if (targetType === "friend") {
+          if (blockedUsers.has(targetId)) return;
+          const chatId = [currentUserDoc.username, targetId].sort().join("_");
+          await db.collection("messages").doc(chatId).collection("chat").add({
+            from: currentUserDoc.username,
+            type: type,
+            data: dataUrl,
+            fileName: fileName,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false,
+          });
+        } else if (targetType === "group") {
+          await db
+            .collection("groupMessages")
+            .doc(targetId)
+            .collection("chat")
+            .add({
+              from: currentUserDoc.username,
+              type: type,
+              data: dataUrl,
+              fileName: fileName,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+        } else if (targetType === "hub") {
+          const hub = hubsCache.find((h) => h.id == targetId);
+          if (hub && hub.creator === currentUserDoc.username) {
+            await db
+              .collection("hubMessages")
+              .doc(targetId)
+              .collection("chat")
+              .add({
+                from: currentUserDoc.username,
+                type: type,
+                data: dataUrl,
+                fileName: fileName,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+          } else {
+            alert("You cannot forward to this hub (not creator).");
+          }
+        }
       }
 
       // ==================== FRIENDS & CHAT ====================
       async function renderFriends() {
         if (!currentUserDoc) return;
-        const friendsList = currentUserDoc.friends || [];
+        let friendsList = currentUserDoc.friends || [];
+        friendsList = friendsList.filter((f) => !blockedUsers.has(f));
         const container = document.getElementById("friendsList");
         if (!container) return;
         if (friendsList.length === 0) {
@@ -1369,33 +1973,90 @@
           const friendPic = friendDoc.exists
             ? friendDoc.data().profilePic
             : null;
-          const chatId = [currentUserDoc.username, friendId].sort().join("_");
-          const lastMsgSnap = await db
-            .collection("messages")
-            .doc(chatId)
-            .collection("chat")
-            .orderBy("timestamp", "desc")
-            .limit(1)
-            .get();
-          let preview = "Say hello";
-          if (!lastMsgSnap.empty)
-            preview = lastMsgSnap.docs[0].data().text || "Media";
+          const unread =
+            messagesCache[currentUserDoc.username]?.[friendId]?.filter(
+              (m) => m.from === friendId && !m.read,
+            ).length || 0;
           const avatarStyle = friendPic
             ? `style="background-image: url(${friendPic}); background-size: cover;"`
             : "";
           html += `<div class="friend-item" onclick="window.openChat('${friendId}','friend')">
       <div class="friend-avatar" ${avatarStyle}>${!friendPic ? "👤" : ""}</div>
-      <div style="flex:1"><div class="friend-name">${escapeHtml(friendName)}</div><div class="friend-preview">${escapeHtml(preview.substring(0, 50))}</div></div>
+      <div style="flex:1"><div class="friend-name">${escapeHtml(friendName)}</div><div class="friend-preview">Say hello</div></div>
+      ${unread > 0 ? `<div class="list-badge">${unread}</div>` : ""}
+      <div style="display:flex; gap:4px; margin-left:8px;">
+        <button class="small-btn" onclick="event.stopPropagation();window.blockUser('${friendId}')">Block</button>
+        <button class="small-btn" onclick="event.stopPropagation();window.deleteChatWith('${friendId}')">Delete</button>
+        <button class="small-btn" onclick="event.stopPropagation();window.clearChatWith('${friendId}')">Clear</button>
+      </div>
     </div>`;
         }
         container.innerHTML = html;
       }
-
+      window.deleteChatWith = async function (friend) {
+        if (
+          confirm(
+            `Delete chat with ${friend}? This will remove them from your friends list and delete all messages.`,
+          )
+        ) {
+          await db
+            .collection("users")
+            .doc(currentUserDoc.username)
+            .update({
+              friends: firebase.firestore.FieldValue.arrayRemove(friend),
+            });
+          await db
+            .collection("users")
+            .doc(friend)
+            .update({
+              friends: firebase.firestore.FieldValue.arrayRemove(
+                currentUserDoc.username,
+              ),
+            });
+          const chatId = [currentUserDoc.username, friend].sort().join("_");
+          const msgs = await db
+            .collection("messages")
+            .doc(chatId)
+            .collection("chat")
+            .get();
+          const batch = db.batch();
+          msgs.forEach((doc) => batch.delete(doc.ref));
+          await batch.commit();
+          await db.collection("messages").doc(chatId).delete();
+          if (currentChatId === friend) closeChat();
+          refreshAllUI();
+          alert(`Chat with ${friend} deleted.`);
+        }
+      };
+      window.clearChatWith = async function (friend) {
+        if (
+          confirm(
+            `Clear your side of the chat with ${friend}? This only deletes messages from your view.`,
+          )
+        ) {
+          const chatId = [currentUserDoc.username, friend].sort().join("_");
+          const msgs = await db
+            .collection("messages")
+            .doc(chatId)
+            .collection("chat")
+            .get();
+          const batch = db.batch();
+          msgs.forEach((doc) => batch.delete(doc.ref));
+          await batch.commit();
+          if (currentChatId === friend) renderMessages(friend);
+          refreshAllUI();
+          alert("Chat cleared on your side.");
+        }
+      };
       async function renderMessages(friendId) {
         const chatId = [currentUserDoc.username, friendId].sort().join("_");
         const container = document.getElementById("chatMessages");
         if (!container) return;
-        if (unsubscribeListeners[0]) unsubscribeListeners[0]();
+        const idx = unsubscribeListeners.findIndex((l) => l._chatId === chatId);
+        if (idx !== -1) {
+          unsubscribeListeners[idx]();
+          unsubscribeListeners.splice(idx, 1);
+        }
         const unsubscribe = db
           .collection("messages")
           .doc(chatId)
@@ -1414,31 +2075,40 @@
             container.innerHTML = msgs
               .map(
                 (m) =>
-                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
+                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m, "friend", false, "", m.id)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
               )
               .join("");
             container.scrollTop = container.scrollHeight;
             attachMentionClickHandlers();
+            attachMessageMenuHandlers();
             updateBadges();
           });
-        unsubscribeListeners[0] = unsubscribe;
+        unsubscribe._chatId = chatId;
+        unsubscribeListeners.push(unsubscribe);
       }
-
       async function sendTextMessage(to, text) {
         if (!text.trim()) return;
+        if (blockedUsers.has(to)) {
+          alert("You cannot send messages to a blocked user.");
+          return;
+        }
+        let finalText = text;
+        if (replyToMessage) {
+          finalText = `[Replying to: ${replyToMessage.preview}]\n${text}`;
+          replyToMessage = null;
+          const quotePreview = document.getElementById("quotePreview");
+          if (quotePreview) quotePreview.remove();
+        }
         const chatId = [currentUserDoc.username, to].sort().join("_");
         await db.collection("messages").doc(chatId).collection("chat").add({
           from: currentUserDoc.username,
-          text: text.trim(),
+          text: finalText,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           read: false,
         });
-        if (currentChatId === to && currentChatType === "friend")
-          renderMessages(to);
-        renderFriends();
       }
-
       async function sendMediaMessage(to, type, dataUrl, fileName) {
+        if (blockedUsers.has(to)) return;
         const chatId = [currentUserDoc.username, to].sort().join("_");
         await db.collection("messages").doc(chatId).collection("chat").add({
           from: currentUserDoc.username,
@@ -1448,44 +2118,84 @@
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           read: false,
         });
-        if (currentChatId === to && currentChatType === "friend")
-          renderMessages(to);
-        renderFriends();
       }
-
-      function sendMessage() {
+      async function sendMessageWithLoading() {
         const input = document.getElementById("messageInput");
-        if (!input || !input.value.trim() || !currentChatId) return;
-        if (currentChatType === "friend")
-          sendTextMessage(currentChatId, input.value);
-        else if (currentChatType === "group")
-          sendGroupMessage(currentChatId, input.value);
-        else if (currentChatType === "hub")
-          sendHubMessage(currentChatId, input.value);
-        input.value = "";
+        const sendBtn = document.getElementById("sendMsgBtn");
+        const text = input.value.trim();
+        if (!text || !currentChatId) {
+          console.log("Cannot send: no text or no chat open");
+          return;
+        }
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = "Sending...";
+        try {
+          if (currentChatType === "friend") {
+            await sendTextMessage(currentChatId, text);
+          } else if (currentChatType === "group") {
+            await sendGroupMessage(currentChatId, text);
+          } else if (currentChatType === "hub") {
+            await sendHubMessage(currentChatId, text);
+          }
+          input.value = "";
+          console.log("Message sent");
+        } catch (err) {
+          console.error("Send error:", err);
+          alert("Failed to send message: " + err.message);
+        } finally {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = "Send";
+        }
       }
-      window.sendMessage = sendMessage;
-      window.openChat = function (id, type) {
+      window.sendMessage = sendMessageWithLoading;
+      window.openChat = async function (id, type) {
         currentChatId = id;
         currentChatType = type;
         if (type === "friend") {
+          if (blockedUsers.has(id)) {
+            alert("You have blocked this user.");
+            return;
+          }
           document.getElementById("chatHeaderName").innerHTML = id;
           document.getElementById("chatHeaderAvatar").innerHTML = "👤";
-          renderMessages(id);
+          await renderMessages(id);
+          document.getElementById("messageInput").disabled = false;
+          document.getElementById("sendMsgBtn").disabled = false;
         } else if (type === "group") {
-          document.getElementById("chatHeaderName").innerHTML = "Group";
-          document.getElementById("chatHeaderAvatar").innerHTML = "👥";
-          renderGroupMessages(id);
+          const g = groupsCache.find((g) => g.id == id);
+          document.getElementById("chatHeaderName").innerHTML = g
+            ? g.name
+            : "Group";
+          document.getElementById("chatHeaderAvatar").innerHTML = g?.picUrl
+            ? `<div style="background-image:url(${g.picUrl}); background-size:cover; width:100%; height:100%;"></div>`
+            : "👥";
+          await renderGroupMessages(id);
+          document.getElementById("messageInput").disabled = false;
+          document.getElementById("sendMsgBtn").disabled = false;
         } else if (type === "hub") {
-          document.getElementById("chatHeaderName").innerHTML = "Hub";
-          document.getElementById("chatHeaderAvatar").innerHTML = "📡";
-          renderHubMessages(id);
+          const h = hubsCache.find((h) => h.id == id);
+          document.getElementById("chatHeaderName").innerHTML = h
+            ? h.name
+            : "Hub";
+          document.getElementById("chatHeaderAvatar").innerHTML = h?.picUrl
+            ? `<div style="background-image:url(${h.picUrl}); background-size:cover; width:100%; height:100%;"></div>`
+            : "📡";
+          await renderHubMessages(id);
+          const canSend = h && h.creator === currentUserDoc.username;
+          document.getElementById("messageInput").disabled = !canSend;
+          document.getElementById("sendMsgBtn").disabled = !canSend;
+          if (!canSend) alert("Only the hub creator can send messages.");
         }
         document.getElementById("chatView").classList.add("open");
       };
       function closeChat() {
         currentChatId = null;
         document.getElementById("chatView").classList.remove("open");
+        if (replyToMessage) {
+          replyToMessage = null;
+          const quotePreview = document.getElementById("quotePreview");
+          if (quotePreview) quotePreview.remove();
+        }
       }
       window.closeChat = closeChat;
 
@@ -1509,13 +2219,17 @@
         });
         container.innerHTML = html;
       }
-      async function sendFriendRequest() {
+      async function sendFriendRequestWithLoading() {
         const target = document
           .getElementById("friendUsername")
           .value.trim()
           .toLowerCase();
         if (!target || target === currentUserDoc.username) {
           alert("Invalid username");
+          return;
+        }
+        if (blockedUsers.has(target)) {
+          alert("You have blocked this user.");
           return;
         }
         const userRef = await db.collection("users").doc(target).get();
@@ -1538,15 +2252,24 @@
           alert("Request already sent!");
           return;
         }
-        await db.collection("friendRequests").add({
-          from: currentUserDoc.username,
-          to: target,
-          status: "pending",
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        alert("Friend request sent!");
-        closeModal("addFriendModal");
-        document.getElementById("friendUsername").value = "";
+        const btn = document.getElementById("sendRequestBtn");
+        const originalText = btn.innerText;
+        btn.innerText = "Sending...";
+        btn.disabled = true;
+        try {
+          await db.collection("friendRequests").add({
+            from: currentUserDoc.username,
+            to: target,
+            status: "pending",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          alert("Friend request sent!");
+          closeModal("addFriendModal");
+          document.getElementById("friendUsername").value = "";
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
       }
       window.acceptReq = async function (fromUser) {
         const query = await db
@@ -1572,8 +2295,6 @@
               currentUserDoc.username,
             ),
           });
-        refreshAllUI();
-        alert(`You are now friends with ${fromUser}`);
       };
       window.denyReq = async function (fromUser) {
         const query = await db
@@ -1584,50 +2305,94 @@
           .get();
         if (query.empty) return;
         await query.docs[0].ref.delete();
-        refreshAllUI();
-        alert(`Denied request from ${fromUser}`);
       };
 
-      // ==================== GROUPS (full) ====================
-      async function renderGroups() {
-        const groupsSnap = await db
-          .collection("groups")
-          .where("members", "array-contains", currentUserDoc.username)
-          .get();
+      // ==================== GROUPS ====================
+      function renderGroups() {
         const container = document.getElementById("groupsList");
         if (!container) return;
-        if (groupsSnap.empty) {
+        if (groupsCache.length === 0) {
           container.innerHTML =
             '<div class="empty">No groups yet. Create one!</div>';
           return;
         }
         let html = "";
-        for (const doc of groupsSnap.docs) {
-          const g = doc.data();
-          const lastMsgSnap = await db
-            .collection("groupMessages")
-            .doc(doc.id)
-            .collection("chat")
-            .orderBy("timestamp", "desc")
-            .limit(1)
-            .get();
-          let preview = "No messages";
-          if (!lastMsgSnap.empty)
-            preview = lastMsgSnap.docs[0].data().text || "Media";
-          const avatarStyle = g.picUrl
-            ? `style="background-image: url(${g.picUrl}); background-size: cover;"`
-            : "";
-          html += `<div class="group-item" onclick="window.openChat('${doc.id}','group')">
-      <div class="group-avatar" ${avatarStyle}>${!g.picUrl ? "👥" : ""}</div>
-      <div style="flex:1"><div class="friend-name">${escapeHtml(g.name)}</div><div class="friend-preview">${escapeHtml(preview.substring(0, 50))}</div></div>
+        for (const g of groupsCache) {
+          const unread = groupUnreadCache[g.id] || 0;
+          html += `<div class="group-item" onclick="window.openChat('${g.id}','group')">
+      <div class="group-avatar" ${g.picUrl ? `style="background-image:url(${g.picUrl}); background-size:cover;"` : ""}>${!g.picUrl ? "👥" : ""}</div>
+      <div style="flex:1"><div class="friend-name">${escapeHtml(g.name)}</div><div class="friend-preview">${g.members?.length || 1} members</div></div>
+      ${unread > 0 ? `<div class="list-badge">${unread}</div>` : ""}
+      <div style="display:flex; gap:4px; margin-left:8px;">
+        ${g.creator === currentUserDoc.username ? `<button class="small-btn" onclick="event.stopPropagation();window.deleteGroup('${g.id}')">Delete</button>` : `<button class="small-btn" onclick="event.stopPropagation();window.leaveGroup('${g.id}')">Leave</button>`}
+        <button class="small-btn" onclick="event.stopPropagation();window.clearGroupChat('${g.id}')">Clear</button>
+      </div>
     </div>`;
         }
         container.innerHTML = html;
       }
+      window.clearGroupChat = async function (groupId) {
+        const group = groupsCache.find((g) => g.id == groupId);
+        if (group && group.creator === currentUserDoc.username) {
+          if (
+            confirm(
+              "Clear all messages in this group? This will delete them for everyone.",
+            )
+          ) {
+            const msgs = await db
+              .collection("groupMessages")
+              .doc(groupId)
+              .collection("chat")
+              .get();
+            const batch = db.batch();
+            msgs.forEach((doc) => batch.delete(doc.ref));
+            await batch.commit();
+            alert("All group messages cleared.");
+            if (currentChatId === groupId) renderGroupMessages(groupId);
+          }
+        } else {
+          alert("Only the group creator can clear all messages.");
+        }
+      };
+      window.deleteGroup = async function (groupId) {
+        if (confirm("Delete this group permanently?")) {
+          const group = groupsCache.find((g) => g.id == groupId);
+          if (group && group.creator === currentUserDoc.username) {
+            await db.collection("groups").doc(groupId).delete();
+            await db.collection("groupMessages").doc(groupId).delete();
+            if (currentChatId === groupId) closeChat();
+            refreshAllUI();
+            alert("Group deleted.");
+          } else {
+            alert("Only the group creator can delete the group.");
+          }
+        }
+      };
+      window.leaveGroup = async function (groupId) {
+        if (confirm("Leave this group? You will no longer see its messages.")) {
+          await db
+            .collection("groups")
+            .doc(groupId)
+            .update({
+              members: firebase.firestore.FieldValue.arrayRemove(
+                currentUserDoc.username,
+              ),
+            });
+          if (currentChatId === groupId) closeChat();
+          refreshAllUI();
+          alert("You left the group.");
+        }
+      };
       async function renderGroupMessages(groupId) {
         const container = document.getElementById("chatMessages");
         if (!container) return;
-        if (unsubscribeListeners[1]) unsubscribeListeners[1]();
+        const idx = unsubscribeListeners.findIndex(
+          (l) => l._groupId === groupId,
+        );
+        if (idx !== -1) {
+          unsubscribeListeners[idx]();
+          unsubscribeListeners.splice(idx, 1);
+        }
         const unsubscribe = db
           .collection("groupMessages")
           .doc(groupId)
@@ -1636,20 +2401,32 @@
           .onSnapshot((snapshot) => {
             const msgs = [];
             snapshot.forEach((doc) => msgs.push({ id: doc.id, ...doc.data() }));
+            let unreadCount = 0;
+            msgs.forEach((m) => {
+              if (m.from !== currentUserDoc.username && !m.read) {
+                m.read = true;
+                unreadCount++;
+              }
+            });
+            groupUnreadCache[groupId] = 0;
             if (msgs.length === 0) {
               container.innerHTML = '<div class="empty">No messages yet</div>';
               return;
             }
             container.innerHTML = msgs
-              .map(
-                (m) =>
-                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
-              )
+              .map((m) => {
+                const senderName = usersCache[m.from]?.displayName || m.from;
+                const showSender = m.from !== currentUserDoc.username;
+                return `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m, "group", showSender, senderName, m.id)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`;
+              })
               .join("");
             container.scrollTop = container.scrollHeight;
             attachMentionClickHandlers();
+            attachMessageMenuHandlers();
+            renderGroups();
           });
-        unsubscribeListeners[1] = unsubscribe;
+        unsubscribe._groupId = groupId;
+        unsubscribeListeners.push(unsubscribe);
       }
       async function sendGroupMessage(groupId, text) {
         if (!text.trim()) return;
@@ -1659,11 +2436,10 @@
           .collection("chat")
           .add({
             from: currentUserDoc.username,
-            text: text.trim(),
+            text: text,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false,
           });
-        if (currentChatId === groupId && currentChatType === "group")
-          renderGroupMessages(groupId);
       }
       async function sendGroupMediaMessage(groupId, type, url, fileName) {
         await db
@@ -1676,9 +2452,8 @@
             data: url,
             fileName: fileName,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false,
           });
-        if (currentChatId === groupId && currentChatType === "group")
-          renderGroupMessages(groupId);
       }
       function showCreateGroupModal() {
         const friends = currentUserDoc.friends || [];
@@ -1693,7 +2468,7 @@
           `<label class="member-checkbox"><input type="checkbox" disabled checked> ${currentUserDoc.username} (Creator)</label>`;
         document.getElementById("createGroupModal").classList.remove("hidden");
       }
-      async function createGroup() {
+      async function createGroupWithLoading() {
         const name = document.getElementById("groupName").value.trim();
         if (!name) {
           alert("Group name required");
@@ -1706,55 +2481,117 @@
         const members = [currentUserDoc.username, ...selectedMembers];
         let picUrl = null;
         const picFile = document.getElementById("groupPicFile").files[0];
-        if (picFile) {
-          const storageRef = storage
-            .ref()
-            .child(`groupPics/${Date.now()}_${picFile.name}`);
-          await storageRef.put(picFile);
-          picUrl = await storageRef.getDownloadURL();
+        const btn = document.getElementById("createGroupSubmitBtn");
+        const originalText = btn.innerText;
+        btn.innerText = "Creating...";
+        btn.disabled = true;
+        try {
+          if (picFile) {
+            const storageRef = storage
+              .ref()
+              .child(`groupPics/${Date.now()}_${picFile.name}`);
+            await storageRef.put(picFile);
+            picUrl = await storageRef.getDownloadURL();
+          }
+          await db.collection("groups").add({
+            name,
+            desc,
+            creator: currentUserDoc.username,
+            admins: [currentUserDoc.username],
+            members,
+            picUrl,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          closeModal("createGroupModal");
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
         }
-        await db.collection("groups").add({
-          name,
-          desc,
-          creator: currentUserDoc.username,
-          admins: [currentUserDoc.username],
-          members,
-          picUrl,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        closeModal("createGroupModal");
-        renderGroups();
       }
 
-      // ==================== HUBS (full) ====================
-      async function renderHubs() {
-        const hubsSnap = await db
-          .collection("hubs")
-          .where("members", "array-contains", currentUserDoc.username)
-          .get();
+      // ==================== HUBS ====================
+      function renderHubs() {
         const container = document.getElementById("hubsList");
         if (!container) return;
-        if (hubsSnap.empty) {
+        if (hubsCache.length === 0) {
           container.innerHTML = '<div class="empty">No hubs</div>';
           return;
         }
         let html = "";
-        for (const doc of hubsSnap.docs) {
-          const h = doc.data();
-          const avatarStyle = h.picUrl
-            ? `style="background-image: url(${h.picUrl}); background-size: cover;"`
-            : "";
-          html += `<div class="hub-item" onclick="window.openChat('${doc.id}','hub')">
-      <div class="hub-avatar" ${avatarStyle}>${!h.picUrl ? "📡" : ""}</div>
+        for (const h of hubsCache) {
+          const unread = hubUnreadCache[h.id] || 0;
+          html += `<div class="hub-item" onclick="window.openChat('${h.id}','hub')">
+      <div class="hub-avatar" ${h.picUrl ? `style="background-image:url(${h.picUrl}); background-size:cover;"` : ""}>${!h.picUrl ? "📡" : ""}</div>
       <div><div class="friend-name">${escapeHtml(h.name)}</div><div class="friend-preview">${h.members.length} members</div></div>
+      ${unread > 0 ? `<div class="list-badge">${unread}</div>` : ""}
+      <div style="display:flex; gap:4px; margin-left:8px;">
+        ${h.creator === currentUserDoc.username ? `<button class="small-btn" onclick="event.stopPropagation();window.deleteHub('${h.id}')">Delete</button>` : `<button class="small-btn" onclick="event.stopPropagation();window.leaveHub('${h.id}')">Leave</button>`}
+        <button class="small-btn" onclick="event.stopPropagation();window.clearHubMessages('${h.id}')">Clear</button>
+      </div>
     </div>`;
         }
         container.innerHTML = html;
       }
+      window.clearHubMessages = async function (hubId) {
+        const hub = hubsCache.find((h) => h.id == hubId);
+        if (hub && hub.creator === currentUserDoc.username) {
+          if (
+            confirm(
+              "Clear all messages in this hub? This will delete them for everyone.",
+            )
+          ) {
+            const msgs = await db
+              .collection("hubMessages")
+              .doc(hubId)
+              .collection("chat")
+              .get();
+            const batch = db.batch();
+            msgs.forEach((doc) => batch.delete(doc.ref));
+            await batch.commit();
+            alert("All hub messages cleared.");
+            if (currentChatId === hubId) renderHubMessages(hubId);
+          }
+        } else {
+          alert("Only the hub creator can clear all messages.");
+        }
+      };
+      window.deleteHub = async function (hubId) {
+        if (confirm("Delete this hub permanently?")) {
+          const hub = hubsCache.find((h) => h.id == hubId);
+          if (hub && hub.creator === currentUserDoc.username) {
+            await db.collection("hubs").doc(hubId).delete();
+            await db.collection("hubMessages").doc(hubId).delete();
+            if (currentChatId === hubId) closeChat();
+            refreshAllUI();
+            alert("Hub deleted.");
+          } else {
+            alert("Only the hub creator can delete the hub.");
+          }
+        }
+      };
+      window.leaveHub = async function (hubId) {
+        if (confirm("Leave this hub? You will no longer see its messages.")) {
+          await db
+            .collection("hubs")
+            .doc(hubId)
+            .update({
+              members: firebase.firestore.FieldValue.arrayRemove(
+                currentUserDoc.username,
+              ),
+            });
+          if (currentChatId === hubId) closeChat();
+          refreshAllUI();
+          alert("You left the hub.");
+        }
+      };
       async function renderHubMessages(hubId) {
         const container = document.getElementById("chatMessages");
         if (!container) return;
-        if (unsubscribeListeners[2]) unsubscribeListeners[2]();
+        const idx = unsubscribeListeners.findIndex((l) => l._hubId === hubId);
+        if (idx !== -1) {
+          unsubscribeListeners[idx]();
+          unsubscribeListeners.splice(idx, 1);
+        }
         const unsubscribe = db
           .collection("hubMessages")
           .doc(hubId)
@@ -1763,6 +2600,14 @@
           .onSnapshot((snapshot) => {
             const msgs = [];
             snapshot.forEach((doc) => msgs.push({ id: doc.id, ...doc.data() }));
+            let unreadCount = 0;
+            msgs.forEach((m) => {
+              if (m.from !== currentUserDoc.username && !m.read) {
+                m.read = true;
+                unreadCount++;
+              }
+            });
+            hubUnreadCache[hubId] = 0;
             if (msgs.length === 0) {
               container.innerHTML = '<div class="empty">No messages yet</div>';
               return;
@@ -1770,39 +2615,50 @@
             container.innerHTML = msgs
               .map(
                 (m) =>
-                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
+                  `<div class="message-bubble ${m.from === currentUserDoc.username ? "message-sent" : "message-received"}">${renderMediaContent(m, "hub", false, "", m.id)}<div class="message-time">${formatTime(m.timestamp)}</div></div>`,
               )
               .join("");
             container.scrollTop = container.scrollHeight;
             attachMentionClickHandlers();
+            attachMessageMenuHandlers();
+            renderHubs();
           });
-        unsubscribeListeners[2] = unsubscribe;
+        unsubscribe._hubId = hubId;
+        unsubscribeListeners.push(unsubscribe);
       }
       async function sendHubMessage(hubId, text) {
         if (!text.trim()) return;
+        const hub = hubsCache.find((h) => h.id == hubId);
+        if (hub && hub.creator !== currentUserDoc.username) {
+          alert("Only the hub creator can send messages.");
+          return;
+        }
         await db.collection("hubMessages").doc(hubId).collection("chat").add({
           from: currentUserDoc.username,
-          text: text.trim(),
+          text: text,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          read: false,
         });
-        if (currentChatId === hubId && currentChatType === "hub")
-          renderHubMessages(hubId);
       }
       async function sendHubMediaMessage(hubId, type, url, fileName) {
+        const hub = hubsCache.find((h) => h.id == hubId);
+        if (hub && hub.creator !== currentUserDoc.username) {
+          alert("Only the hub creator can send messages.");
+          return;
+        }
         await db.collection("hubMessages").doc(hubId).collection("chat").add({
           from: currentUserDoc.username,
           type: type,
           data: url,
           fileName: fileName,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          read: false,
         });
-        if (currentChatId === hubId && currentChatType === "hub")
-          renderHubMessages(hubId);
       }
       function showCreateHubModal() {
         document.getElementById("createHubModal").classList.remove("hidden");
       }
-      async function createHub() {
+      async function createHubWithLoading() {
         const name = document.getElementById("hubName").value.trim();
         if (!name) {
           alert("Hub name required");
@@ -1812,152 +2668,241 @@
         const password = document.getElementById("hubPass").value;
         let picUrl = null;
         const picFile = document.getElementById("hubPicFile").files[0];
-        if (picFile) {
-          const storageRef = storage
-            .ref()
-            .child(`hubPics/${Date.now()}_${picFile.name}`);
-          await storageRef.put(picFile);
-          picUrl = await storageRef.getDownloadURL();
+        const btn = document.getElementById("createHubSubmitBtn");
+        const originalText = btn.innerText;
+        btn.innerText = "Creating...";
+        btn.disabled = true;
+        try {
+          if (picFile) {
+            const storageRef = storage
+              .ref()
+              .child(`hubPics/${Date.now()}_${picFile.name}`);
+            await storageRef.put(picFile);
+            picUrl = await storageRef.getDownloadURL();
+          }
+          await db.collection("hubs").add({
+            name,
+            desc,
+            password,
+            creator: currentUserDoc.username,
+            members: [currentUserDoc.username],
+            picUrl,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          closeModal("createHubModal");
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
         }
-        await db.collection("hubs").add({
-          name,
-          desc,
-          password,
-          creator: currentUserDoc.username,
-          members: [currentUserDoc.username],
-          picUrl,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        closeModal("createHubModal");
-        renderHubs();
       }
 
       // ==================== CHAPTERS ====================
-      async function renderChapters() {
-        const chaptersSnap = await db
-          .collection("chapters")
-          .orderBy("timestamp", "desc")
-          .get();
+      async function deleteOldChapters() {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const chaptersSnap = await db.collection("chapters").get();
+        const batch = db.batch();
+        let deletedCount = 0;
+        chaptersSnap.forEach((doc) => {
+          const data = doc.data();
+          if (data.timestamp && data.timestamp.toDate() < twentyFourHoursAgo) {
+            batch.delete(doc.ref);
+            deletedCount++;
+          }
+        });
+        if (deletedCount > 0) {
+          await batch.commit();
+          console.log(`Deleted ${deletedCount} old chapters`);
+        }
+      }
+      setInterval(deleteOldChapters, 60 * 60 * 1000);
+
+      function renderChapters() {
         const container = document.getElementById("chaptersList");
         if (!container) return;
-        if (chaptersSnap.empty) {
+        let filtered = chaptersCache.filter((c) => !blockedUsers.has(c.user));
+        if (filtered.length === 0) {
           container.innerHTML =
             '<div class="empty">No chapters yet. Post your first chapter!</div>';
           return;
         }
         let html = "";
-        for (const doc of chaptersSnap.docs) {
-          const c = doc.data();
-          const userDoc = await db.collection("users").doc(c.user).get();
-          const displayName = userDoc.exists
-            ? userDoc.data().displayName
-            : c.user;
-          const tierDoc = await db.collection("tiers").doc(c.user).get();
-          const tier = tierDoc.exists ? tierDoc.data().tier : 0;
+        for (const c of filtered) {
+          const userDoc = usersCache[c.user] || { displayName: c.user };
+          const displayName = userDoc.displayName;
+          const tier = (usersCache[c.user] && usersCache[c.user].tier) || 0;
           const isLiked = c.likes && c.likes.includes(currentUserDoc.username);
           const isNew =
             !c.viewedBy?.includes(currentUserDoc.username) &&
             c.user !== currentUserDoc.username;
-          html += `<div class="chapter-card" style="${isNew ? "border-left-color: #ff4466;" : ""}" onclick="window.viewChapter('${doc.id}')">
+          html += `<div class="chapter-card" data-chapter-id="${c.id}" style="${isNew ? "border-left-color: #ff4466;" : ""}">
       <div class="chapter-header"><div class="chapter-avatar">📖</div><div><div class="chapter-user">${escapeHtml(displayName)} <span class="tier-badge">${getTierName(tier)}</span></div><div class="chapter-time">${formatTime(c.timestamp)}</div></div></div>
       <div class="chapter-text">${escapeHtml(c.text)}</div>
-      <div class="chapter-stats"><span>👁️ ${c.views || 0}</span><span>❤️ ${c.likes?.length || 0}</span><button class="like-btn ${isLiked ? "liked" : ""}" onclick="event.stopPropagation();window.likeChapter('${doc.id}')"><i class="fas fa-heart"></i></button></div>
-      ${c.user === currentUserDoc.username ? `<button class="delete-chapter" onclick="event.stopPropagation();window.deleteChapter('${doc.id}')">Del</button>` : ""}
+      <div class="chapter-stats"><span>👁️ ${c.views || 0}</span><span>❤️ ${c.likes?.length || 0}</span><button class="like-btn ${isLiked ? "liked" : ""}" data-chapter-id="${c.id}"><i class="fas fa-heart"></i> <span class="like-count">${c.likes?.length || 0}</span></button></div>
+      ${c.user === currentUserDoc.username ? `<button class="delete-chapter" data-chapter-id="${c.id}">Del</button>` : ""}
     </div>`;
         }
         container.innerHTML = html;
-        updateBadges();
+        // Like handlers
+        document.querySelectorAll(".like-btn").forEach((btn) => {
+          btn.onclick = async (e) => {
+            e.stopPropagation();
+            const chapterId = btn.getAttribute("data-chapter-id");
+            const countSpan = btn.querySelector(".like-count");
+            const currentCount = parseInt(countSpan.innerText);
+            btn.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> <span class="like-count">${currentCount}</span>`;
+            btn.disabled = true;
+            try {
+              const chapterRef = db.collection("chapters").doc(chapterId);
+              const chapter = await chapterRef.get();
+              if (!chapter.exists) return;
+              const likes = chapter.data().likes || [];
+              let newLikes;
+              if (likes.includes(currentUserDoc.username)) {
+                newLikes = likes.filter((u) => u !== currentUserDoc.username);
+              } else {
+                newLikes = [...likes, currentUserDoc.username];
+              }
+              await chapterRef.update({ likes: newLikes });
+              const chaptersSnap = await db
+                .collection("chapters")
+                .orderBy("timestamp", "desc")
+                .get();
+              chaptersCache = [];
+              chaptersSnap.forEach((doc) =>
+                chaptersCache.push({ id: doc.id, ...doc.data() }),
+              );
+              renderChapters();
+            } catch (err) {
+              console.error(err);
+            }
+          };
+        });
+        // Delete chapter
+        document.querySelectorAll(".delete-chapter").forEach((btn) => {
+          btn.onclick = async (e) => {
+            e.stopPropagation();
+            const chapterId = btn.getAttribute("data-chapter-id");
+            if (confirm("Delete this chapter?")) {
+              await db.collection("chapters").doc(chapterId).delete();
+            }
+          };
+        });
+        // View increment
+        document.querySelectorAll(".chapter-card").forEach((card) => {
+          card.onclick = async (e) => {
+            if (
+              e.target.classList.contains("like-btn") ||
+              e.target.classList.contains("delete-chapter") ||
+              e.target.closest(".like-btn") ||
+              e.target.closest(".delete-chapter")
+            )
+              return;
+            const chapterId = card.getAttribute("data-chapter-id");
+            const chapterRef = db.collection("chapters").doc(chapterId);
+            const chapter = await chapterRef.get();
+            if (!chapter.exists) return;
+            const c = chapter.data();
+            if (!c.viewedBy?.includes(currentUserDoc.username)) {
+              const newViews = (c.views || 0) + 1;
+              const viewedBy = c.viewedBy
+                ? [...c.viewedBy, currentUserDoc.username]
+                : [currentUserDoc.username];
+              await chapterRef.update({ views: newViews, viewedBy });
+              const chaptersSnap = await db
+                .collection("chapters")
+                .orderBy("timestamp", "desc")
+                .get();
+              chaptersCache = [];
+              chaptersSnap.forEach((doc) =>
+                chaptersCache.push({ id: doc.id, ...doc.data() }),
+              );
+              renderChapters();
+            }
+            alert(
+              `📖 ${c.text}\n❤️ ${c.likes?.length || 0} likes\n👁️ ${c.views || 0} views`,
+            );
+          };
+        });
       }
-      window.viewChapter = async function (id) {
-        const chapterRef = db.collection("chapters").doc(id);
-        const chapter = await chapterRef.get();
-        if (!chapter.exists) return;
-        const c = chapter.data();
-        if (!c.viewedBy?.includes(currentUserDoc.username)) {
-          const newViews = (c.views || 0) + 1;
-          const viewedBy = c.viewedBy
-            ? [...c.viewedBy, currentUserDoc.username]
-            : [currentUserDoc.username];
-          await chapterRef.update({ views: newViews, viewedBy });
-          renderChapters();
-        }
-        alert(
-          `📖 ${c.text}\n❤️ ${c.likes?.length || 0} likes\n👁️ ${c.views || 0} views`,
-        );
-      };
-      window.likeChapter = async function (id) {
-        const chapterRef = db.collection("chapters").doc(id);
-        const chapter = await chapterRef.get();
-        if (!chapter.exists) return;
-        const likes = chapter.data().likes || [];
-        let newLikes;
-        if (likes.includes(currentUserDoc.username)) {
-          newLikes = likes.filter((u) => u !== currentUserDoc.username);
-        } else {
-          newLikes = [...likes, currentUserDoc.username];
-        }
-        await chapterRef.update({ likes: newLikes });
-        renderChapters();
-      };
-      window.deleteChapter = async function (id) {
-        if (!confirm("Delete this chapter?")) return;
-        await db.collection("chapters").doc(id).delete();
-        renderChapters();
-      };
-      async function postChapter() {
+      async function postChapterWithLoading() {
         const text = document.getElementById("chapterText").value.trim();
         if (!text) return;
-        const tierRef = db.collection("tiers").doc(currentUserDoc.username);
-        const tierDoc = await tierRef.get();
-        const tierData = tierDoc.exists
-          ? tierDoc.data()
-          : {
-              tier: 0,
-              lastPostDate: null,
-              weeklyChapters: 0,
-              monthlyChapters: 0,
-            };
-        let newTier = tierData.tier + 1;
-        let newWeekly = (tierData.weeklyChapters || 0) + 1;
-        let newMonthly = (tierData.monthlyChapters || 0) + 1;
-        const now = new Date();
-        const weekStart = getWeekStart(now);
-        const monthStart = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          1,
-        ).toDateString();
-        await tierRef.set(
-          {
-            tier: newTier,
-            lastPostDate: now,
-            streak:
-              tierData.lastPostDate &&
-              new Date(tierData.lastPostDate).toDateString() ===
-                new Date(now.setDate(now.getDate() - 1)).toDateString()
-                ? (tierData.streak || 0) + 1
-                : 1,
-            weeklyChapters: newWeekly,
-            monthlyChapters: newMonthly,
-            weekReset: weekStart,
-            monthReset: monthStart,
-          },
-          { merge: true },
-        );
-        await db.collection("chapters").add({
-          user: currentUserDoc.username,
-          text: text,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          likes: [],
-          views: 0,
-          viewedBy: [],
-        });
-        closeModal("chapterModal");
-        document.getElementById("chapterText").value = "";
-        renderChapters();
-        renderLeaderboard();
-        renderWinners();
-        alert("Chapter posted! +1 Tier point");
+        const btn = document.getElementById("postChapterBtn");
+        const originalText = btn.innerText;
+        btn.innerText = "Posting...";
+        btn.disabled = true;
+        try {
+          const tierRef = db.collection("tiers").doc(currentUserDoc.username);
+          const tierDoc = await tierRef.get();
+          const tierData = tierDoc.exists
+            ? tierDoc.data()
+            : {
+                tier: 0,
+                lastPostDate: null,
+                weeklyChapters: 0,
+                monthlyChapters: 0,
+              };
+          const now = new Date();
+          const todayStr = now.toDateString();
+          let pointEarned = false;
+          let newTier = tierData.tier;
+          let newStreak = tierData.streak || 0;
+          if (tierData.lastPostDate !== todayStr) {
+            newTier = (tierData.tier || 0) + 1;
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (tierData.lastPostDate === yesterday.toDateString()) {
+              newStreak = (tierData.streak || 0) + 1;
+            } else {
+              newStreak = 1;
+            }
+            pointEarned = true;
+          } else {
+            newStreak = tierData.streak || 0;
+          }
+          let newWeekly = (tierData.weeklyChapters || 0) + 1;
+          let newMonthly = (tierData.monthlyChapters || 0) + 1;
+          const weekStart = getWeekStart(now);
+          const monthStart = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            1,
+          ).toDateString();
+          await tierRef.set(
+            {
+              tier: newTier,
+              lastPostDate: todayStr,
+              streak: newStreak,
+              weeklyChapters: newWeekly,
+              monthlyChapters: newMonthly,
+              weekReset: weekStart,
+              monthReset: monthStart,
+            },
+            { merge: true },
+          );
+          await db.collection("chapters").add({
+            user: currentUserDoc.username,
+            text: text,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            likes: [],
+            views: 0,
+            viewedBy: [],
+          });
+          closeModal("chapterModal");
+          document.getElementById("chapterText").value = "";
+          if (pointEarned) {
+            alert(
+              `Chapter posted! +1 Tier point. Your tier is now ${newTier}.`,
+            );
+          } else {
+            alert(
+              `Chapter posted! (No tier point today – you already posted today.)`,
+            );
+          }
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
       }
       function getWeekStart(date) {
         const d = new Date(date);
@@ -2025,7 +2970,7 @@
           const displayName = userDoc.exists
             ? userDoc.data().displayName
             : doc.id;
-          usersCache[doc.id] = { displayName };
+          usersCache[doc.id] = { displayName, tier: data.tier };
           html += `<div class="leaderboard-item"><div class="leaderboard-rank">#${idx++}</div><div>🏆</div><div style="flex:1"><div class="friend-name">${escapeHtml(displayName)}</div></div><div><span class="tier-badge">${getTierName(data.tier)} (${data.tier})</span></div></div>`;
         }
         container.innerHTML = html;
@@ -2038,6 +2983,62 @@
         if (tier >= 5) return "🥉 NOVICE";
         if (tier >= 1) return "🌱 BEGINNER";
         return "📘 ROOKIE";
+      }
+      async function updateBadges() {
+        let totalUnreadPrivate = 0;
+        if (messagesCache[currentUserDoc?.username]) {
+          for (let f in messagesCache[currentUserDoc.username]) {
+            totalUnreadPrivate += messagesCache[currentUserDoc.username][
+              f
+            ].filter((m) => m.from === f && !m.read).length;
+          }
+        }
+        document.getElementById("chatsTabBadge").innerHTML = totalUnreadPrivate;
+        document
+          .getElementById("chatsTabBadge")
+          .classList.toggle("hidden", totalUnreadPrivate === 0);
+        let totalUnreadGroups = Object.values(groupUnreadCache).reduce(
+          (a, b) => a + b,
+          0,
+        );
+        document.getElementById("groupsTabBadge").innerHTML = totalUnreadGroups;
+        document
+          .getElementById("groupsTabBadge")
+          .classList.toggle("hidden", totalUnreadGroups === 0);
+        let totalUnreadHubs = Object.values(hubUnreadCache).reduce(
+          (a, b) => a + b,
+          0,
+        );
+        document.getElementById("hubsTabBadge").innerHTML = totalUnreadHubs;
+        document
+          .getElementById("hubsTabBadge")
+          .classList.toggle("hidden", totalUnreadHubs === 0);
+        const friends = currentUserDoc?.friends || [];
+        const newChapters = chaptersCache.filter(
+          (c) =>
+            friends.includes(c.user) &&
+            !c.viewedBy?.includes(currentUserDoc.username) &&
+            !blockedUsers.has(c.user),
+        ).length;
+        document.getElementById("chaptersTabBadge").innerHTML = newChapters;
+        document
+          .getElementById("chaptersTabBadge")
+          .classList.toggle("hidden", newChapters === 0);
+      }
+      function refreshAllUI() {
+        if (!currentUserDoc) return;
+        renderFriends();
+        renderGroups();
+        renderHubs();
+        renderChapters();
+        renderLeaderboard();
+        renderWinners();
+        if (currentChatId && currentChatType === "friend")
+          renderMessages(currentChatId);
+        else if (currentChatId && currentChatType === "group")
+          renderGroupMessages(currentChatId);
+        else if (currentChatId && currentChatType === "hub")
+          renderHubMessages(currentChatId);
       }
 
       // ==================== PROFILE & DELETE ACCOUNT ====================
@@ -2058,82 +3059,115 @@
           avatar.innerHTML = "👤";
         }
       }
-      async function saveProfile() {
-        const newName = document.getElementById("editDisplayName").value.trim();
-        if (newName) {
-          await db
-            .collection("users")
-            .doc(currentUserDoc.username)
-            .update({ displayName: newName });
-          currentUserDoc.displayName = newName;
-        }
-        const newPass = document.getElementById("editPassword").value;
-        if (newPass) {
-          const confirm = document.getElementById("editConfirmPassword").value;
-          if (newPass !== confirm) {
-            alert("Passwords do not match");
-            return;
+      async function saveProfileWithLoading() {
+        const btn = document.getElementById("saveProfileBtn");
+        const originalText = btn.innerText;
+        btn.innerText = "Saving...";
+        btn.disabled = true;
+        try {
+          const newName = document
+            .getElementById("editDisplayName")
+            .value.trim();
+          if (newName) {
+            await db
+              .collection("users")
+              .doc(currentUserDoc.username)
+              .update({ displayName: newName });
+            currentUserDoc.displayName = newName;
           }
-          const user = auth.currentUser;
-          await user.updatePassword(newPass);
-          alert("Password updated! Use your new password next login.");
+          const newPass = document.getElementById("editPassword").value;
+          if (newPass) {
+            const confirm = document.getElementById(
+              "editConfirmPassword",
+            ).value;
+            if (newPass !== confirm) {
+              alert("Passwords do not match");
+              return;
+            }
+            const user = auth.currentUser;
+            await user.updatePassword(newPass);
+            alert("Password updated! Use your new password next login.");
+          }
+          const picFile = document.getElementById("profilePicInput").files[0];
+          if (picFile) {
+            const storageRef = storage
+              .ref()
+              .child(`profilePics/${currentUserDoc.username}`);
+            await storageRef.put(picFile);
+            const downloadUrl = await storageRef.getDownloadURL();
+            await db
+              .collection("users")
+              .doc(currentUserDoc.username)
+              .update({ profilePic: downloadUrl });
+            updateAvatar();
+          }
+          closeModal("editProfileModal");
+          alert("Profile updated!");
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
         }
-        const picFile = document.getElementById("profilePicInput").files[0];
-        if (picFile) {
-          const storageRef = storage
-            .ref()
-            .child(`profilePics/${currentUserDoc.username}`);
-          await storageRef.put(picFile);
-          const downloadUrl = await storageRef.getDownloadURL();
-          await db
-            .collection("users")
-            .doc(currentUserDoc.username)
-            .update({ profilePic: downloadUrl });
-          updateAvatar();
-        }
-        closeModal("editProfileModal");
-        refreshAllUI();
-        alert("Profile updated!");
       }
-      async function deleteAccount() {
+      async function deleteAccountWithLoading() {
         if (!confirm("Delete your account permanently? All data will be lost."))
           return;
-        const friends = currentUserDoc.friends || [];
-        for (const friend of friends) {
-          await db
-            .collection("users")
-            .doc(friend)
-            .update({
-              friends: firebase.firestore.FieldValue.arrayRemove(
+        const btn = document.getElementById("deleteAccountBtn");
+        const originalText = btn.innerText;
+        btn.innerText = "Deleting...";
+        btn.disabled = true;
+        try {
+          const friends = currentUserDoc.friends || [];
+          for (const friend of friends) {
+            await db
+              .collection("users")
+              .doc(friend)
+              .update({
+                friends: firebase.firestore.FieldValue.arrayRemove(
+                  currentUserDoc.username,
+                ),
+              });
+          }
+          const requestsFrom = await db
+            .collection("friendRequests")
+            .where("from", "==", currentUserDoc.username)
+            .get();
+          requestsFrom.forEach((d) => d.ref.delete());
+          const requestsTo = await db
+            .collection("friendRequests")
+            .where("to", "==", currentUserDoc.username)
+            .get();
+          requestsTo.forEach((d) => d.ref.delete());
+          const groupsSnap = await db
+            .collection("groups")
+            .where("members", "array-contains", currentUserDoc.username)
+            .get();
+          for (const doc of groupsSnap.docs) {
+            await doc.ref.update({
+              members: firebase.firestore.FieldValue.arrayRemove(
                 currentUserDoc.username,
               ),
             });
+          }
+          const hubsSnap = await db
+            .collection("hubs")
+            .where("members", "array-contains", currentUserDoc.username)
+            .get();
+          for (const doc of hubsSnap.docs) {
+            await doc.ref.update({
+              members: firebase.firestore.FieldValue.arrayRemove(
+                currentUserDoc.username,
+              ),
+            });
+          }
+          await db.collection("users").doc(currentUserDoc.username).delete();
+          await db.collection("tiers").doc(currentUserDoc.username).delete();
+          await db.collection("blocked").doc(currentUserDoc.username).delete();
+          await auth.currentUser.delete();
+          logout();
+        } finally {
+          btn.innerText = originalText;
+          btn.disabled = false;
         }
-        const requestsFrom = await db
-          .collection("friendRequests")
-          .where("from", "==", currentUserDoc.username)
-          .get();
-        requestsFrom.forEach((d) => d.ref.delete());
-        const requestsTo = await db
-          .collection("friendRequests")
-          .where("to", "==", currentUserDoc.username)
-          .get();
-        requestsTo.forEach((d) => d.ref.delete());
-        const groupsSnap = await db
-          .collection("groups")
-          .where("members", "array-contains", currentUserDoc.username)
-          .get();
-        for (const doc of groupsSnap.docs) {
-          await doc.ref.update({
-            members: firebase.firestore.FieldValue.arrayRemove(
-              currentUserDoc.username,
-            ),
-          });
-        }
-        await db.collection("users").doc(currentUserDoc.username).delete();
-        await db.collection("tiers").doc(currentUserDoc.username).delete();
-        await auth.currentUser.delete();
-        logout();
       }
 
       // ==================== MEDIA ATTACHMENTS ====================
@@ -2148,38 +3182,50 @@
           if (!attachBtn.contains(e.target) && !attachMenu.contains(e.target))
             attachMenu.classList.remove("show");
         });
-        function handleFileUpload(accept, type) {
+        async function handleFileUpload(accept, type, label) {
           let input = document.createElement("input");
           input.type = "file";
           input.accept = accept;
           input.onchange = async (e) => {
             const file = e.target.files[0];
             if (file && currentChatId) {
+              const loadingSpan = document.createElement("span");
+              loadingSpan.className = "loading-indicator";
+              loadingSpan.innerText = ` Uploading ${label}...`;
+              document
+                .getElementById("sendMsgBtn")
+                .parentElement.appendChild(loadingSpan);
               const storageRef = storage
                 .ref()
                 .child(`chatMedia/${currentChatId}/${Date.now()}_${file.name}`);
               await storageRef.put(file);
               const url = await storageRef.getDownloadURL();
               if (currentChatType === "friend")
-                sendMediaMessage(currentChatId, type, url, file.name);
+                await sendMediaMessage(currentChatId, type, url, file.name);
               else if (currentChatType === "group")
-                sendGroupMediaMessage(currentChatId, type, url, file.name);
+                await sendGroupMediaMessage(
+                  currentChatId,
+                  type,
+                  url,
+                  file.name,
+                );
               else if (currentChatType === "hub")
-                sendHubMediaMessage(currentChatId, type, url, file.name);
+                await sendHubMediaMessage(currentChatId, type, url, file.name);
+              loadingSpan.remove();
             }
             attachMenu.classList.remove("show");
           };
           input.click();
         }
         document.getElementById("attachImage").onclick = () =>
-          handleFileUpload("image/*", "image");
+          handleFileUpload("image/*", "image", "image");
         document.getElementById("attachVideo").onclick = () =>
-          handleFileUpload("video/*", "video");
+          handleFileUpload("video/*", "video", "video");
         document.getElementById("attachFile").onclick = () =>
-          handleFileUpload("*/*", "file");
+          handleFileUpload("*/*", "file", "file");
       }
 
-      // Voice recording
+      // ==================== VOICE RECORDING ====================
       voiceBtn.onclick = async () => {
         if (!currentChatId) {
           alert("Open a chat first");
@@ -2200,22 +3246,39 @@
             mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
             mediaRecorder.onstop = async () => {
               const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+              const loadingSpan = document.createElement("span");
+              loadingSpan.className = "loading-indicator";
+              loadingSpan.innerText = " Uploading voice...";
+              document
+                .getElementById("sendMsgBtn")
+                .parentElement.appendChild(loadingSpan);
               const storageRef = storage
                 .ref()
                 .child(`voiceMessages/${Date.now()}.webm`);
               await storageRef.put(audioBlob);
               const url = await storageRef.getDownloadURL();
               if (currentChatType === "friend")
-                sendMediaMessage(currentChatId, "voice", url, "voice.webm");
+                await sendMediaMessage(
+                  currentChatId,
+                  "voice",
+                  url,
+                  "voice.webm",
+                );
               else if (currentChatType === "group")
-                sendGroupMediaMessage(
+                await sendGroupMediaMessage(
                   currentChatId,
                   "voice",
                   url,
                   "voice.webm",
                 );
               else if (currentChatType === "hub")
-                sendHubMediaMessage(currentChatId, "voice", url, "voice.webm");
+                await sendHubMediaMessage(
+                  currentChatId,
+                  "voice",
+                  url,
+                  "voice.webm",
+                );
+              loadingSpan.remove();
               stream.getTracks().forEach((t) => t.stop());
             };
             mediaRecorder.start();
@@ -2399,9 +3462,10 @@
         });
       }
 
-      // ==================== TAG SYSTEM (searchable friends list, inserts @username) ====================
+      // ==================== TAG SYSTEM ====================
       function showTagPopup() {
-        const friends = currentUserDoc?.friends || [];
+        let friends = currentUserDoc?.friends || [];
+        friends = friends.filter((f) => !blockedUsers.has(f));
         if (!friends.length) {
           alert("No friends to tag");
           return;
@@ -2457,6 +3521,75 @@
         }, 100);
       }
 
+      // ==================== GIF PICKER ====================
+      async function searchGifs(query) {
+        if (!query.trim()) return [];
+        const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.data.map((gif) => gif.images.fixed_height_small.url);
+      }
+      function buildGifPicker() {
+        const gifBtn = document.getElementById("gifBtn");
+        const picker = document.getElementById("gifPicker");
+        const searchInput = document.getElementById("gifSearchInput");
+        const resultsDiv = document.getElementById("gifResults");
+        gifBtn.onclick = (e) => {
+          e.stopPropagation();
+          picker.classList.toggle("show");
+          if (picker.classList.contains("show")) searchInput.focus();
+        };
+        searchInput.oninput = async (e) => {
+          const query = e.target.value;
+          if (query.length < 2) {
+            resultsDiv.innerHTML = "";
+            return;
+          }
+          const gifs = await searchGifs(query);
+          resultsDiv.innerHTML = gifs
+            .map(
+              (url) =>
+                `<img src="${url}" class="gif-result" data-url="${url}">`,
+            )
+            .join("");
+          document.querySelectorAll(".gif-result").forEach((img) => {
+            img.onclick = async () => {
+              const gifUrl = img.getAttribute("data-url");
+              if (currentChatId) {
+                if (currentChatType === "friend")
+                  await sendMediaMessage(
+                    currentChatId,
+                    "gif",
+                    gifUrl,
+                    "gif.gif",
+                  );
+                else if (currentChatType === "group")
+                  await sendGroupMediaMessage(
+                    currentChatId,
+                    "gif",
+                    gifUrl,
+                    "gif.gif",
+                  );
+                else if (currentChatType === "hub")
+                  await sendHubMediaMessage(
+                    currentChatId,
+                    "gif",
+                    gifUrl,
+                    "gif.gif",
+                  );
+              }
+              picker.classList.remove("show");
+              searchInput.value = "";
+              resultsDiv.innerHTML = "";
+            };
+          });
+        };
+        document.addEventListener("click", (e) => {
+          if (!gifBtn.contains(e.target) && !picker.contains(e.target))
+            picker.classList.remove("show");
+        });
+      }
+
       // ==================== THEME ====================
       function toggleTheme() {
         document.body.classList.toggle("light-theme");
@@ -2470,38 +3603,52 @@
       document.addEventListener("DOMContentLoaded", async () => {
         buildEmojiPicker();
         setupAttachments();
+        buildGifPicker();
         document.getElementById("themeBtn").onclick = toggleTheme;
         document.getElementById("editProfileBtn").onclick = () =>
           document
             .getElementById("editProfileModal")
             .classList.remove("hidden");
-        document.getElementById("saveProfileBtn").onclick = saveProfile;
-        document.getElementById("deleteAccountBtn").onclick = deleteAccount;
+        document.getElementById("saveProfileBtn").onclick =
+          saveProfileWithLoading;
+        document.getElementById("deleteAccountBtn").onclick =
+          deleteAccountWithLoading;
         document.getElementById("closeProfileModal").onclick = () =>
           closeModal("editProfileModal");
         document.getElementById("addFriendBtn").onclick = () =>
           document.getElementById("addFriendModal").classList.remove("hidden");
-        document.getElementById("sendRequestBtn").onclick = sendFriendRequest;
+        document.getElementById("sendRequestBtn").onclick =
+          sendFriendRequestWithLoading;
         document.getElementById("closeAddFriendModal").onclick = () =>
           closeModal("addFriendModal");
         document.getElementById("createGroupBtn").onclick =
           showCreateGroupModal;
-        document.getElementById("createGroupSubmitBtn").onclick = createGroup;
+        document.getElementById("createGroupSubmitBtn").onclick =
+          createGroupWithLoading;
         document.getElementById("closeGroupModal").onclick = () =>
           closeModal("createGroupModal");
         document.getElementById("createHubBtn").onclick = showCreateHubModal;
-        document.getElementById("createHubSubmitBtn").onclick = createHub;
+        document.getElementById("createHubSubmitBtn").onclick =
+          createHubWithLoading;
         document.getElementById("closeHubModal").onclick = () =>
           closeModal("createHubModal");
         document.getElementById("newChapterBtn").onclick = () =>
           document.getElementById("chapterModal").classList.remove("hidden");
-        document.getElementById("postChapterBtn").onclick = postChapter;
+        document.getElementById("postChapterBtn").onclick =
+          postChapterWithLoading;
         document.getElementById("closeChapterModal").onclick = () =>
           closeModal("chapterModal");
         document.getElementById("closeChatBtn").onclick = closeChat;
-        document.getElementById("sendMsgBtn").onclick = sendMessage;
+        // Ensure send button is attached
+        const sendBtn = document.getElementById("sendMsgBtn");
+        if (sendBtn) {
+          sendBtn.onclick = sendMessageWithLoading;
+          console.log("Send button attached");
+        } else {
+          console.error("Send button not found");
+        }
         document.getElementById("messageInput").onkeypress = (e) => {
-          if (e.key === "Enter") sendMessage();
+          if (e.key === "Enter") sendMessageWithLoading();
         };
         document.getElementById("tagBtn").onclick = (e) => {
           e.stopPropagation();
@@ -2571,9 +3718,10 @@
             const username = email.replace("@chatrix.local", "");
             await loadCurrentUserData(username);
             document.getElementById("loginModal").classList.add("hidden");
-            refreshAllUI();
+            startRealtimeListeners();
             updateAvatar();
             showScreen("chats");
+            deleteOldChapters();
           } else {
             document.getElementById("loginModal").classList.remove("hidden");
           }
